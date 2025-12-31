@@ -1,13 +1,121 @@
-import { Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import './App.css'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth';
+import ProtectedRoute from './components/ProtectedRoute';
+import DashboardLayout from './layouts/DashboardLayout';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import CheckIn from './pages/CheckIn';
+import Membresias from './pages/Membresias';
+import Ventas from './pages/Ventas';
+import Usuarios from './pages/Usuarios';
+import Gimnasios from './pages/Gimnasios';
+import Sucursales from './pages/Sucursales';
+import LoadingSpinner from './components/LoadingSpinner';
+import { BranchProvider } from './context/BranchContext'; // Added
+import './App.css';
 
 function App() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-    </Routes>
-  )
+    <BranchProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? <Navigate to="/" replace /> : <Login />
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            isAuthenticated ? <Navigate to="/" replace /> : <Register />
+          }
+        />
+
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkin"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <CheckIn />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/membresias"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Membresias />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ventas"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Ventas />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/usuarios"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Usuarios />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gimnasios"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Gimnasios />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sucursales"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Sucursales />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BranchProvider>
+  );
 }
 
-export default App
+export default App;

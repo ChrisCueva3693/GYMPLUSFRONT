@@ -1,0 +1,166 @@
+.membresias-page {
+    max-width: 1400px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-2xl);
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.filter-tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-2xl);
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+}
+
+.filter-tab:hover {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-secondary);
+}
+
+.filter-tab.active {
+    background: var(--gradient-blue);
+    color: white;
+    border-color: transparent;
+}
+
+.membresias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.membresia-card {
+    padding: var(--spacing-xl) !important;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.membresia-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.user-avatar-sm {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.membresia-user h3 {
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--color-accent-success);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--color-accent-warning);
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--color-accent-danger);
+}
+
+.badge-gray {
+    background: rgba(156, 163, 175, 0.2);
+    color: var(--color-text-muted);
+}
+
+.membresia-dates {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border-primary);
+}
+
+.date-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.date-label {
+    font-size: 0.9rem;
+    color: var(--color-text-tertiary);
+}
+
+.date-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-transform: capitalize;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-3xl) !important;
+}
+
+.empty-state svg {
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-state p {
+    color: var(--color-text-tertiary);
+}
+
+@media (max-width: 768px) {
+    .membresias-grid {
+        grid-template-columns: 1fr;
+    }
+}
