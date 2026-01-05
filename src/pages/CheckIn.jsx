@@ -10,6 +10,7 @@ import checkinService from '../services/checkinService';
 import toast from 'react-hot-toast';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useBranch } from '../context/BranchContext';
 import './CheckIn.css';
 
 const CheckIn = () => {
@@ -19,6 +20,8 @@ const CheckIn = () => {
     const [loading, setLoading] = useState(false);
     const [checkingIn, setCheckingIn] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+
+    const { selectedBranchId } = useBranch();
 
     const resetForm = () => {
         setUserId('');
@@ -51,10 +54,16 @@ const CheckIn = () => {
     const handleCheckIn = async () => {
         if (!userData) return;
 
+        if (!selectedBranchId) {
+            toast.error("No hay una sucursal seleccionada");
+            return;
+        }
+
         setCheckingIn(true);
         try {
             await checkinService.createCheckIn({
-                usuarioId: userData.id,
+                idUsuario: userData.id,
+                idSucursal: selectedBranchId
             });
 
             setShowSuccess(true);

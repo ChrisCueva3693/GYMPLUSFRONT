@@ -12,9 +12,20 @@ import Usuarios from './pages/Usuarios';
 import Gimnasios from './pages/Gimnasios';
 import Sucursales from './pages/Sucursales';
 import Productos from './pages/Productos';
+import TiposMembresia from './pages/TiposMembresia';
+import Reportes from './pages/Reportes';
+import Inicio from './pages/Inicio';
 import LoadingSpinner from './components/LoadingSpinner';
 import { BranchProvider } from './context/BranchContext'; // Added
 import './App.css';
+
+const HomeRedirect = () => {
+  const { user } = useAuth();
+  if (user?.roles?.includes('CLIENTE')) {
+    return <Inicio />;
+  }
+  return <Dashboard />;
+};
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -46,7 +57,19 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Dashboard />
+                <div className="home-redirect-wrapper">
+                  <HomeRedirect />
+                </div>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inicio"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Inicio />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -107,6 +130,26 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Sucursales />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tipos-membresia"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <TiposMembresia />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Reportes />
               </DashboardLayout>
             </ProtectedRoute>
           }

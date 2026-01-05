@@ -6,6 +6,7 @@ import {
     UserCheck,
     CreditCard,
     ShoppingCart,
+    FileText,
     Users,
     Building2,
     MapPin,
@@ -18,10 +19,20 @@ import './DashboardLayout.css';
 import BranchSelector from '../components/BranchSelector';
 
 const DashboardLayout = ({ children }) => {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Track screen resize
+    React.useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -29,11 +40,14 @@ const DashboardLayout = ({ children }) => {
     };
 
     const menuItems = [
-        { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['DEV', 'ADMIN', 'COACH', 'CLIENTE'] },
-        { path: '/checkin', icon: UserCheck, label: 'Check-In', roles: ['DEV', 'ADMIN', 'COACH'] },
-        { path: '/membresias', icon: CreditCard, label: 'Membresías', roles: ['DEV', 'ADMIN'] },
-        { path: '/ventas', icon: ShoppingCart, label: 'Ventas', roles: ['DEV', 'ADMIN'] },
-        { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN'] },
+        { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['DEV', 'ADMIN'] },
+        { path: '/inicio', icon: UserCheck, label: 'Inicio', roles: ['CLIENTE'] },
+        { path: '/checkin', icon: UserCheck, label: 'Entradas', roles: ['DEV', 'ADMIN', 'COACH'] },
+        { path: '/membresias', icon: CreditCard, label: 'Membresías', roles: ['DEV', 'ADMIN', 'COACH'] },
+        { path: '/tipos-membresia', icon: Users, label: 'Tipos Membresia', roles: ['DEV', 'ADMIN'] },
+        { path: '/ventas', icon: ShoppingCart, label: 'Ventas', roles: ['DEV', 'ADMIN', 'COACH'] },
+        { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN', 'COACH'] },
+        { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['DEV', 'ADMIN'] },
         { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
         { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV', 'ADMIN'] },
         { path: '/productos', icon: Package, label: 'Productos', roles: ['DEV', 'ADMIN'] },
@@ -63,6 +77,7 @@ const DashboardLayout = ({ children }) => {
                                 to={item.path}
                                 className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
                                 title={item.label}
+                                onClick={() => isMobile && setSidebarOpen(false)}
                             >
                                 <item.icon size={20} />
                                 {sidebarOpen && <span>{item.label}</span>}
@@ -92,6 +107,24 @@ const DashboardLayout = ({ children }) => {
                     </button>
                 </div>
             </aside>
+
+            {/* Mobile Overlay Backdrop */}
+            {isMobile && sidebarOpen && (
+                <div
+                    className="mobile-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        backdropFilter: 'blur(3px)',
+                        zIndex: 90
+                    }}
+                />
+            )}
 
             {/* Main Content */}
             <div className="main-content">

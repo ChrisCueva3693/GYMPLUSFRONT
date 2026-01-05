@@ -36,8 +36,12 @@ const Dashboard = () => {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
             const checkInsToday = checkIns.filter(c => {
-                const checkInDate = new Date(c.fechaHora);
+                // Fix: use fechaEntrada instead of fechaHora
+                const checkInDate = new Date(c.fechaEntrada);
                 checkInDate.setHours(0, 0, 0, 0);
                 return checkInDate.getTime() === today.getTime();
             }).length;
@@ -50,13 +54,17 @@ const Dashboard = () => {
                 return ventaDate.getTime() === today.getTime();
             }).length;
 
-            // Memberships expiring in next 7 days
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
+            // Memberships expiring today or tomorrow
             const expiringMembresias = membresias.filter(m => {
                 if (!m.fechaFin) return false;
                 const endDate = new Date(m.fechaFin);
-                return endDate >= today && endDate <= nextWeek && m.estado === 'ACTIVA';
+                // Adjust for potential timezone offset if dates act weird, but normally straight conversion works for ISO YYYY-MM-DD
+                // However, let's ensure we compare dates only.
+                const endDateStr = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()).toDateString();
+                const todayStr = today.toDateString();
+                const tomorrowStr = tomorrow.toDateString();
+
+                return (endDateStr === todayStr || endDateStr === tomorrowStr) && m.estado === 'ACTIVA';
             }).length;
 
             setStats({
@@ -149,8 +157,7 @@ const Dashboard = () => {
                     <div className="alert-content">
                         <h3>Atención</h3>
                         <p>
-                            Tienes <strong>{stats.expiringMembresias}</strong> membresías que vencen en los
-                            próximos 7 días. Considera contactar a estos clientes.
+                            Tienes <strong>{stats.expiringMembresias}</strong> membresías que vencen hoy o mañana. Considera contactar a estos clientes.
                         </p>
                     </div>
                 </Card>

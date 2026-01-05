@@ -18,9 +18,15 @@ const Membresias = () => {
     const [tiposPago, setTiposPago] = useState([]);
 
     // New Membresia Form
-    const [selectedCliente, setSelectedCliente] = useState('');
+    const [selectedClientes, setSelectedClientes] = useState([]); // List of client IDs
+    const [currentClienteToAdd, setCurrentClienteToAdd] = useState('');
+
+    // Split Payment State
+    const [pagos, setPagos] = useState([]);
+    const [currentPagoType, setCurrentPagoType] = useState('');
+    const [currentPagoMonto, setCurrentPagoMonto] = useState('');
+
     const [selectedTipoMembresia, setSelectedTipoMembresia] = useState('');
-    const [selectedTipoPago, setSelectedTipoPago] = useState('');
     const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split('T')[0]);
     const [submitting, setSubmitting] = useState(false);
 
@@ -54,9 +60,12 @@ const Membresias = () => {
             setTiposPago(tiposPagoRes.data);
 
             // Reset form
-            setSelectedCliente('');
+            setSelectedClientes([]);
+            setCurrentClienteToAdd('');
             setSelectedTipoMembresia('');
-            setSelectedTipoPago('');
+            setPagos([]);
+            setCurrentPagoType('');
+            setCurrentPagoMonto('');
             setFechaInicio(new Date().toISOString().split('T')[0]);
 
             setIsModalOpen(true);
@@ -75,23 +84,146 @@ const Membresias = () => {
         return tiposMembresia.find(tm => tm.id === parseInt(selectedTipoMembresia));
     };
 
+    // Group Logic
+    const addCliente = () => {
+        if (!currentClienteToAdd) return;
+        const clienteId = parseInt(currentClienteToAdd);
+        if (selectedClientes.includes(clienteId)) {
+            toast.error("El cliente ya está agregado");
+            return;
+        }
+        setSelectedClientes([...selectedClientes, clienteId]);
+        setCurrentClienteToAdd('');
+    };
+
+    const removeCliente = (clienteId) => {
+        setSelectedClientes(selectedClientes.filter(id => id !== clienteId));
+    };
+
+    const getClienteName = (id) => {
+        const c = clientes.find(c => c.id === id);
+        return c ? `${c.nombre} ${c.apellido} (${c.username})` : 'Desconocido';
+    };
+
+    // Payment Logic
+    const getTotal = () => {
+        const plan = getSelectedPlanDetails();
+        if (!plan) return 0;
+        return plan.precioBase * (selectedClientes.length > 0 ? selectedClientes.length : 1);
+        // If 0 clients selected yet, assume 1 for price preview, but mandate >0 to submit
+    };
+
+    const getTotalPagado = () => {
+        return pagos.reduce((sum, p) => sum + parseFloat(p.monto), 0);
+    };
+
+    const getFaltante = () => {
+        return Math.max(0, getTotal() - getTotalPagado());
+    };
+
+    const addPago = () => {
+        if (!currentPagoType || !currentPagoMonto) return;
+
+        const monto = parseFloat(currentPagoMonto);
+        if (monto <= 0) {
+            toast.error("El monto debe ser mayor a 0");
+            return;
+        }
+
+        const tipo = tiposPago.find(tp => tp.id === parseInt(currentPagoType));
+        if (!tipo) return;
+
+        if (getTotalPagado() + monto > getTotal() + 0.01) {
+            toast.error("El monto excede el total a pagar");
+            return;
+        }
+
+        setPagos([...pagos, {
+            tipoPagoId: tipo.id,
+            nombre: tipo.nombre,
+            monto: monto
+        }]);
+
+        setCurrentPagoType('');
+        setCurrentPagoMonto('');
+    };
+
+    const removePago = (index) => {
+        const newPagos = [...pagos];
+        newPagos.splice(index, 1);
+        setPagos(newPagos);
+    };
+
+    // Auto-fill amount logic
+    useEffect(() => {
+        if (currentPagoType) {
+            const faltante = getFaltante();
+            if (faltante > 0) {
+                setCurrentPagoMonto(faltante.toFixed(2));
+            }
+        }
+    }, [currentPagoType]);
+
     const handleSubmit = async () => {
-        if (!selectedCliente || !selectedTipoMembresia || !selectedTipoPago || !fechaInicio) {
+        if (selectedClientes.length === 0 || !selectedTipoMembresia || !fechaInicio) {
             toast.error('Complete todos los campos requeridos');
+            return;
+        }
+
+        if (pagos.length === 0) {
+            toast.error('Debe agregar al menos un pago');
+            return;
+        }
+
+        const total = getTotal();
+        const pagado = getTotalPagado();
+
+        if (Math.abs(pagado - total) > 0.05) {
+            toast.error(`El pago total ($${pagado.toFixed(2)}) no coincide con el total ($${total.toFixed(2)})`);
             return;
         }
 
         setSubmitting(true);
         try {
-            const request = {
-                clienteId: parseInt(selectedCliente),
-                tipoMembresiaId: parseInt(selectedTipoMembresia),
-                tipoPagoId: parseInt(selectedTipoPago),
-                fechaInicio: fechaInicio
-            };
+            let request;
 
-            await membresiaService.createMembresia(request);
-            toast.success('Membresía creada exitosamente');
+            // Logic: Always use the Group Endpoint for consistency if list > 1, 
+            // OR even for 1 to support split payments if standard endpoint doesn't support it (which it does now).
+            // But we created a specific DTO for multiple clients.
+            // Let's use the group endpoint if we have multiple clients OR if we want to use the new DTO structure consistently.
+            // Actually, existing CrearMembresiaRequest is for single client.
+            // New GrupoMembresiaRequest is for list of clients.
+
+            if (selectedClientes.length > 1) {
+                // Group Request
+                request = {
+                    clientesIds: selectedClientes,
+                    tipoMembresiaId: parseInt(selectedTipoMembresia),
+                    pagos: pagos.map(p => ({
+                        tipoPagoId: p.tipoPagoId,
+                        monto: p.monto
+                    })),
+                    fechaInicio: fechaInicio,
+                    referencia: 'Web'
+                };
+                await apiClient.post('/api/membresias/grupal', request); // Use generic client for new endpoint
+            } else {
+                // Single Request (using standard service if compatible, or just group with 1)
+                // We updated CrearMembresiaRequest to support split payments too.
+                request = {
+                    clienteId: selectedClientes[0],
+                    tipoMembresiaId: parseInt(selectedTipoMembresia),
+                    pagos: pagos.map(p => ({
+                        tipoPagoId: p.tipoPagoId,
+                        monto: p.monto
+                    })),
+                    fechaInicio: fechaInicio,
+                    referencia: 'Web'
+                };
+                await membresiaService.createMembresia(request);
+            }
+
+            toast.success('Membresía(s) creada(s) exitosamente');
             closeModal();
             fetchMembresias();
         } catch (error) {
@@ -187,19 +319,47 @@ const Membresias = () => {
                         </div>
 
                         <div className="membresias-modal-body">
+
+                            {/* Clientes Group Selection */}
                             <div className="membresias-form-group">
-                                <label>Cliente *</label>
-                                <select
-                                    value={selectedCliente}
-                                    onChange={(e) => setSelectedCliente(e.target.value)}
-                                >
-                                    <option value="">Seleccionar cliente...</option>
-                                    {clientes.map(c => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.nombre} {c.apellido} ({c.username})
-                                        </option>
+                                <label>Cliente(s) *</label>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <select
+                                        value={currentClienteToAdd}
+                                        onChange={(e) => setCurrentClienteToAdd(e.target.value)}
+                                        style={{ flex: 1 }}
+                                    >
+                                        <option value="">Seleccionar cliente...</option>
+                                        {clientes.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.nombre} {c.apellido} ({c.username})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={addCliente}
+                                        style={{
+                                            height: '38px',
+                                            backgroundColor: 'var(--color-bg-tertiary)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: 'var(--radius-md)',
+                                            padding: '0 1rem',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
+                                <div className="selected-clients-list" style={{ marginTop: '0.5rem', maxHeight: '100px', overflowY: 'auto' }}>
+                                    {selectedClientes.map(id => (
+                                        <div key={id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px', borderBottom: '1px solid var(--color-border-light)', fontSize: '0.9rem' }}>
+                                            <span>{getClienteName(id)}</span>
+                                            <button onClick={() => removeCliente(id)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={14} /></button>
+                                        </div>
                                     ))}
-                                </select>
+                                    {selectedClientes.length === 0 && <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Ningún cliente seleccionado</span>}
+                                </div>
                             </div>
 
                             <div className="membresias-form-group">
@@ -226,21 +386,6 @@ const Membresias = () => {
                                 />
                             </div>
 
-                            <div className="membresias-form-group">
-                                <label>Forma de Pago *</label>
-                                <select
-                                    value={selectedTipoPago}
-                                    onChange={(e) => setSelectedTipoPago(e.target.value)}
-                                >
-                                    <option value="">Seleccionar forma de pago...</option>
-                                    {tiposPago.map(tp => (
-                                        <option key={tp.id} value={tp.id}>
-                                            {tp.nombre}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
                             {planDetails && (
                                 <div className="membership-summary">
                                     <div className="summary-row">
@@ -255,9 +400,74 @@ const Membresias = () => {
                                         <span>Vencimiento estimado:</span>
                                         <span>{fechaFinCalculada}</span>
                                     </div>
+                                    <div className="summary-row">
+                                        <span>Clientes:</span>
+                                        <span>{selectedClientes.length || 1}</span>
+                                    </div>
                                     <div className="summary-row total">
                                         <span>Total a Pagar:</span>
-                                        <span>${planDetails.precioBase.toFixed(2)}</span>
+                                        <span>${getTotal().toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Split Payment Section (Reuse logic) */}
+                            {planDetails && selectedClientes.length > 0 && (
+                                <div className="membresias-form-group" style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border-light)', paddingTop: '1rem' }}>
+                                    <label>Pagos</label>
+                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-end' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <select
+                                                value={currentPagoType}
+                                                onChange={(e) => setCurrentPagoType(e.target.value)}
+                                                style={{ width: '100%' }}
+                                            >
+                                                <option value="">Método de pago...</option>
+                                                {tiposPago.map(tp => (
+                                                    <option key={tp.id} value={tp.id}>{tp.nombre}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div style={{ width: '100px' }}>
+                                            <input
+                                                type="number"
+                                                value={currentPagoMonto}
+                                                onChange={(e) => setCurrentPagoMonto(e.target.value)}
+                                                step="0.01"
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={addPago}
+                                            style={{
+                                                height: '38px',
+                                                backgroundColor: 'var(--color-bg-tertiary)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: 'var(--radius-md)',
+                                                padding: '0 1rem',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <Plus size={16} />
+                                        </button>
+                                    </div>
+
+                                    <div className="pagos-list" style={{ backgroundColor: 'var(--color-bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '0.5rem', marginBottom: '1rem' }}>
+                                        {pagos.length === 0 ? (
+                                            <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Agrega un pago</div>
+                                        ) : (
+                                            pagos.map((p, index) => (
+                                                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 5px', fontSize: '0.9rem' }}>
+                                                    <span>{p.nombre}</span>
+                                                    <span>${p.monto.toFixed(2)} <button onClick={() => removePago(index)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={12} /></button></span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <div className="payment-summary" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                        <span>Faltante: <span style={{ color: getFaltante() > 0 ? 'var(--color-error)' : 'var(--color-text-muted)' }}>${getFaltante().toFixed(2)}</span></span>
                                     </div>
                                 </div>
                             )}
@@ -271,7 +481,7 @@ const Membresias = () => {
                                 type="button"
                                 className="membresias-btn-submit"
                                 onClick={handleSubmit}
-                                disabled={submitting}
+                                disabled={submitting || selectedClientes.length === 0 || getFaltante() > 0.05}
                             >
                                 <CreditCard size={16} />
                                 {submitting ? 'Procesando...' : 'Crear Membresía'}

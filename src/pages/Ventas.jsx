@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, X, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, X, Trash2, Eye } from 'lucide-react';
+import SearchableSelect from '../components/SearchableSelect';
 import apiClient from '../services/apiClient';
 import ventaService from '../services/ventaService';
 import productoService from '../services/productoService';
@@ -18,11 +19,17 @@ const Ventas = () => {
 
     // New Venta Form
     const [selectedCliente, setSelectedCliente] = useState('');
-    const [selectedTipoPago, setSelectedTipoPago] = useState('');
+
+    // Split Payment State
+    const [pagos, setPagos] = useState([]); // [{ tipoPagoId, nombre, monto }]
+    const [currentPagoType, setCurrentPagoType] = useState('');
+    const [currentPagoMonto, setCurrentPagoMonto] = useState('');
+
     const [cart, setCart] = useState([]);
     const [selectedProducto, setSelectedProducto] = useState('');
     const [cantidad, setCantidad] = useState(1);
     const [submitting, setSubmitting] = useState(false);
+    const [selectedVenta, setSelectedVenta] = useState(null); // For detail modal
 
     useEffect(() => {
         fetchVentas();
@@ -50,14 +57,15 @@ const Ventas = () => {
                 apiClient.get('/api/tipos-pago')
             ]);
 
-            // Filter clientes (only CLIENTE role or all for now)
             setClientes(clientesRes.data);
             setProductos(productosRes);
             setTiposPago(tiposPagoRes.data);
 
             // Reset form
             setSelectedCliente('');
-            setSelectedTipoPago('');
+            setPagos([]);
+            setCurrentPagoType('');
+            setCurrentPagoMonto('');
             setCart([]);
             setSelectedProducto('');
             setCantidad(1);
@@ -116,9 +124,75 @@ const Ventas = () => {
         return cart.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
     };
 
+    // Payment Logic
+    const getTotalPagado = () => {
+        return pagos.reduce((sum, p) => sum + parseFloat(p.monto), 0);
+    };
+
+    const getFaltante = () => {
+        return Math.max(0, getTotal() - getTotalPagado());
+    };
+
+    const addPago = () => {
+        if (!currentPagoType || !currentPagoMonto) return;
+
+        const monto = parseFloat(currentPagoMonto);
+        if (monto <= 0) {
+            toast.error("El monto debe ser mayor a 0");
+            return;
+        }
+
+        const tipo = tiposPago.find(tp => tp.id === parseInt(currentPagoType));
+        if (!tipo) return;
+
+        if (getTotalPagado() + monto > getTotal() + 0.01) { // small tolerance
+            toast.error("El monto excede el total a pagar");
+            return;
+        }
+
+        setPagos([...pagos, {
+            tipoPagoId: tipo.id,
+            nombre: tipo.nombre,
+            monto: monto
+        }]);
+
+        setCurrentPagoType('');
+        setCurrentPagoMonto('');
+    };
+
+    const removePago = (index) => {
+        const newPagos = [...pagos];
+        newPagos.splice(index, 1);
+        setPagos(newPagos);
+    };
+
+    // Auto-fill amount when type selected
+    useEffect(() => {
+        if (currentPagoType) {
+            const faltante = getFaltante();
+            if (faltante > 0) {
+                setCurrentPagoMonto(faltante.toFixed(2));
+            }
+        }
+    }, [currentPagoType]);
+
+
     const handleSubmit = async () => {
-        if (!selectedCliente || !selectedTipoPago || cart.length === 0) {
-            toast.error('Complete todos los campos');
+        if (!selectedCliente || cart.length === 0) {
+            toast.error('Complete la información de venta y productos');
+            return;
+        }
+
+        if (pagos.length === 0) {
+            toast.error('Debe agregar al menos un pago');
+            return;
+        }
+
+        const total = getTotal();
+        const pagado = getTotalPagado();
+
+        if (Math.abs(pagado - total) > 0.05) { // 5 cent tolerance
+            toast.error(`El pago total ($${pagado.toFixed(2)}) no coincide con el total de la venta ($${total.toFixed(2)})`);
             return;
         }
 
@@ -126,7 +200,10 @@ const Ventas = () => {
         try {
             const request = {
                 clienteId: parseInt(selectedCliente),
-                tipoPagoId: parseInt(selectedTipoPago),
+                pagos: pagos.map(p => ({
+                    tipoPagoId: p.tipoPagoId,
+                    monto: p.monto
+                })),
                 items: cart.map(item => ({
                     productoId: item.productoId,
                     cantidad: item.cantidad
@@ -139,8 +216,8 @@ const Ventas = () => {
             fetchVentas();
         } catch (error) {
             console.error('Error creating venta:', error);
-            const msg = error.response?.data?.message || error.response?.data || 'Error al procesar venta';
-            toast.error(typeof msg === 'string' ? msg : 'Error al procesar venta');
+            const msg = error.response?.data?.message || 'Error al procesar venta';
+            toast.error(msg);
         } finally {
             setSubmitting(false);
         }
@@ -205,9 +282,18 @@ const Ventas = () => {
                                             ${venta.total?.toFixed(2)}
                                         </td>
                                         <td>
-                                            <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
-                                                {venta.estado}
-                                            </span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
+                                                    {venta.estado}
+                                                </span>
+                                                <button
+                                                    className="icon-btn-view"
+                                                    onClick={() => setSelectedVenta(venta)}
+                                                    title="Ver Detalle"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -222,7 +308,67 @@ const Ventas = () => {
                 </div>
             )}
 
-            {/* Modal */}
+            {/* Sale Detail Modal */}
+            {selectedVenta && (
+                <div className="ventas-modal-overlay" onClick={() => setSelectedVenta(null)}>
+                    <div className="ventas-modal detail-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="ventas-modal-header">
+                            <h2>Detalle de Venta #{selectedVenta.id}</h2>
+                            <button className="ventas-modal-close" onClick={() => setSelectedVenta(null)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="ventas-modal-body">
+                            <div className="detail-info-grid">
+                                <div className="detail-item">
+                                    <span className="label">Cliente</span>
+                                    <span className="value">{selectedVenta.clienteNombre}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Fecha</span>
+                                    <span className="value">{formatDate(selectedVenta.fechaVenta)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Total</span>
+                                    <span className="value highlight">${selectedVenta.total?.toFixed(2)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Estado</span>
+                                    <span className={`value badge ${selectedVenta.estado?.toLowerCase()}`}>
+                                        {selectedVenta.estado}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <h3 className="detail-subtitle">Productos</h3>
+                            <div className="detail-products-list">
+                                {selectedVenta.detalles && selectedVenta.detalles.length > 0 ? (
+                                    selectedVenta.detalles.map((detalle, idx) => (
+                                        <div key={idx} className="detail-product-row">
+                                            <span className="prod-name">{detalle.productoNombre}</span>
+                                            <span className="prod-calc">
+                                                {detalle.cantidad} x ${detalle.precioUnitario?.toFixed(2)}
+                                            </span>
+                                            <span className="prod-subtotal">
+                                                ${detalle.subtotal?.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="no-details">No hay detalles disponibles</div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="ventas-modal-footer">
+                            <button className="ventas-btn-cancel" onClick={() => setSelectedVenta(null)}>
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* New Sale Modal */}
             {isModalOpen && (
                 <div className="ventas-modal-overlay" onClick={closeModal}>
                     <div className="ventas-modal" onClick={(e) => e.stopPropagation()}>
@@ -234,62 +380,56 @@ const Ventas = () => {
                         </div>
 
                         <div className="ventas-modal-body">
-                            {/* Cliente y Tipo de Pago */}
+                            {/* Cliente */}
                             <div className="ventas-section">
-                                <div className="ventas-section-title">Información de la Venta</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
-                                    <div className="ventas-form-group">
-                                        <label>Cliente *</label>
-                                        <select
-                                            value={selectedCliente}
-                                            onChange={(e) => setSelectedCliente(e.target.value)}
-                                        >
-                                            <option value="">Seleccionar cliente...</option>
-                                            {clientes.map(c => (
-                                                <option key={c.id} value={c.id}>
-                                                    {c.nombre} {c.apellido}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="ventas-form-group">
-                                        <label>Forma de Pago *</label>
-                                        <select
-                                            value={selectedTipoPago}
-                                            onChange={(e) => setSelectedTipoPago(e.target.value)}
-                                        >
-                                            <option value="">Seleccionar...</option>
-                                            {tiposPago.map(tp => (
-                                                <option key={tp.id} value={tp.id}>{tp.nombre}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                <div className="ventas-section-title">Información de Venta</div>
+                                <div className="ventas-form-group">
+                                    <label>Cliente *</label>
+                                    <SearchableSelect
+                                        options={clientes.map(c => ({
+                                            value: c.id,
+                                            label: `${c.nombre} ${c.apellido} (${c.cedula || 'N/A'})`,
+                                            cedula: c.cedula,
+                                            nombre: `${c.nombre} ${c.apellido}`
+                                        }))}
+                                        value={selectedCliente}
+                                        onChange={(val) => setSelectedCliente(val)}
+                                        placeholder="Buscar cliente por nombre o cédula..."
+                                        filterFunction={(option, search) => {
+                                            const searchLower = search.toLowerCase();
+                                            const nombreMatch = option.nombre.toLowerCase().includes(searchLower);
+                                            const cedulaMatch = option.cedula && option.cedula.includes(searchLower);
+                                            return nombreMatch || cedulaMatch;
+                                        }}
+                                    />
                                 </div>
                             </div>
 
                             {/* Agregar Productos */}
                             <div className="ventas-section">
-                                <div className="ventas-section-title">Agregar Productos</div>
+                                <div className="ventas-section-title">Productos</div>
                                 <div className="product-selector">
-                                    <select
-                                        value={selectedProducto}
-                                        onChange={(e) => setSelectedProducto(e.target.value)}
-                                    >
-                                        <option value="">Seleccionar producto...</option>
-                                        {productos.filter(p => p.stockActual > 0).map(p => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.nombre} - ${p.precioUnitario} (Stock: {p.stockActual})
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div style={{ flex: 1 }}>
+                                        <SearchableSelect
+                                            options={productos.filter(p => p.stockActual > 0).map(p => ({
+                                                value: p.id,
+                                                label: `${p.nombre} - $${p.precioUnitario} (Stock: ${p.stockActual})`,
+                                                nombre: p.nombre
+                                            }))}
+                                            value={selectedProducto}
+                                            onChange={(val) => setSelectedProducto(val)}
+                                            placeholder="Buscar producto..."
+                                        />
+                                    </div>
                                     <input
                                         type="number"
                                         min="1"
                                         value={cantidad}
                                         onChange={(e) => setCantidad(parseInt(e.target.value) || 1)}
                                         placeholder="Cant."
+                                        className="input-cantidad-dark"
                                     />
-                                    <button type="button" onClick={addToCart}>
+                                    <button type="button" onClick={addToCart} className="btn-add-cart-dark">
                                         <Plus size={16} />
                                     </button>
                                 </div>
@@ -328,11 +468,102 @@ const Ventas = () => {
                                 {/* Total */}
                                 {cart.length > 0 && (
                                     <div className="cart-total">
-                                        <span className="cart-total-label">TOTAL A PAGAR</span>
+                                        <span className="cart-total-label">Subtotal Venta</span>
                                         <span className="cart-total-value">${getTotal().toFixed(2)}</span>
                                     </div>
                                 )}
                             </div>
+
+                            {/* Payment Section (Split Payment) */}
+                            {cart.length > 0 && (
+                                <div className="ventas-section">
+                                    <div className="ventas-section-title">Pagos</div>
+
+                                    {/* Add Payment Form */}
+                                    <div className="payment-adder" style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-end' }}>
+                                        <div className="ventas-form-group" style={{ flex: 1, marginBottom: 0 }}>
+                                            <label style={{ fontSize: '0.8rem' }}>Método</label>
+                                            <select
+                                                value={currentPagoType}
+                                                onChange={(e) => setCurrentPagoType(e.target.value)}
+                                                style={{ width: '100%' }}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                {tiposPago.map(tp => (
+                                                    <option key={tp.id} value={tp.id}>{tp.nombre}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="ventas-form-group" style={{ width: '120px', marginBottom: 0 }}>
+                                            <label style={{ fontSize: '0.8rem' }}>Monto</label>
+                                            <input
+                                                type="number"
+                                                value={currentPagoMonto}
+                                                onChange={(e) => setCurrentPagoMonto(e.target.value)}
+                                                step="0.01"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={addPago}
+                                            className="btn-add-pago"
+                                            style={{
+                                                height: '38px',
+                                                backgroundColor: 'var(--color-bg-tertiary)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: 'var(--radius-md)',
+                                                padding: '0 1rem',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <Plus size={16} />
+                                        </button>
+                                    </div>
+
+                                    {/* Payments List */}
+                                    <div className="pagos-list" style={{ backgroundColor: 'var(--color-bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '0.5rem' }}>
+                                        {pagos.length === 0 ? (
+                                            <div style={{ textAlign: 'center', padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                                                No hay pagos registrados
+                                            </div>
+                                        ) : (
+                                            pagos.map((p, index) => (
+                                                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0.5rem', borderBottom: '1px solid var(--color-border-light)' }}>
+                                                    <span>{p.nombre}</span>
+                                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                        <span style={{ fontWeight: 600 }}>${p.monto.toFixed(2)}</span>
+                                                        <button
+                                                            onClick={() => removePago(index)}
+                                                            style={{ border: 'none', background: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: 0 }}
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    {/* Payment Totals */}
+                                    <div className="payment-summary" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                        <div>
+                                            <span style={{ color: 'var(--color-text-muted)' }}>Total a Pagar:</span>
+                                            <span style={{ fontWeight: 700, marginLeft: '5px' }}>${getTotal().toFixed(2)}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ color: 'var(--color-text-muted)' }}>Pagado:</span>
+                                            <span style={{ fontWeight: 700, marginLeft: '5px', color: 'var(--color-success)' }}>${getTotalPagado().toFixed(2)}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ color: 'var(--color-text-muted)' }}>Faltante:</span>
+                                            <span style={{ fontWeight: 700, marginLeft: '5px', color: getFaltante() > 0 ? 'var(--color-error)' : 'var(--color-text-muted)' }}>
+                                                ${getFaltante().toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
 
                         <div className="ventas-modal-footer">
@@ -343,10 +574,10 @@ const Ventas = () => {
                                 type="button"
                                 className="ventas-btn-submit"
                                 onClick={handleSubmit}
-                                disabled={submitting || cart.length === 0}
+                                disabled={submitting || cart.length === 0 || getFaltante() > 0.05}
                             >
                                 <ShoppingCart size={16} />
-                                {submitting ? 'Procesando...' : 'Procesar Venta'}
+                                {submitting ? 'Procesando...' : 'Completar Venta'}
                             </button>
                         </div>
                     </div>

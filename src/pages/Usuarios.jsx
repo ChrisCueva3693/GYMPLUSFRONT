@@ -28,10 +28,15 @@ const Usuarios = () => {
         idSucursalPorDefecto: null
     });
 
-    // Roles that ADMIN can assign (not DEV)
-    const availableRoles = user?.roles?.includes('DEV')
-        ? ['DEV', 'ADMIN', 'CLIENTE']
-        : ['ADMIN', 'CLIENTE'];
+    // Roles that ADMIN/COACH can assign
+    let availableRoles = ['CLIENTE'];
+    if (user?.roles?.includes('DEV')) {
+        availableRoles = ['DEV', 'ADMIN', 'COACH', 'CLIENTE'];
+    } else if (user?.roles?.includes('ADMIN')) {
+        availableRoles = ['ADMIN', 'COACH', 'CLIENTE'];
+    } else if (user?.roles?.includes('COACH')) {
+        availableRoles = ['CLIENTE'];
+    }
 
     useEffect(() => {
         loadUsuarios();
@@ -43,7 +48,7 @@ const Usuarios = () => {
             let response;
             if (user?.roles?.includes('DEV')) {
                 response = await apiClient.get('/api/usuarios');
-            } else if (user?.roles?.includes('ADMIN')) {
+            } else if (user?.roles?.includes('ADMIN') || user?.roles?.includes('COACH')) {
                 if (user.idSucursalPorDefecto) {
                     response = await apiClient.get(`/api/usuarios/sucursal/${user.idSucursalPorDefecto}`);
                 } else {

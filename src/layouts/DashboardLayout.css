@@ -111,6 +111,11 @@
     transform: translateX(0);
 }
 
+.nav-item.active svg {
+    color: white;
+    /* Force icon color */
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
     padding: var(--spacing-lg);
@@ -265,19 +270,137 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+
+    /* Backdrop for mobile when sidebar is open */
+    .dashboard-layout::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 90;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transition-base);
+    }
+
+    /* Show backdrop when sidebar open (using a class on layout or assuming generic check) 
+       NOTE: We need a way to target this. Since we toggle .sidebar classes, 
+       we might need a parent class. 
+       Alternative: We can make the sidebar itself have a giant shadow or use a sibling selector 
+       if the HTML structure allows. 
+       HTML: Sidebar is sibling to Main Content.
+       We can put the backdrop on the Sidebar itself using box-shadow? No.
+       Let's stick to styling the Sidebar to be "Floating" and Premium first. 
+    */
+
     .sidebar {
-        transform: translateX(-100%);
+        transform: translateX(-120%);
+        /* Hide completely */
+        width: 80px !important;
+        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.2);
+        /* Premium Shadow */
+        border-right: none;
+        /* Cleaner look */
+        background: rgba(30, 41, 59, 0.95);
+        /* Darker, slightly transparent if supports backdrop filter */
+        backdrop-filter: blur(10px);
     }
 
     .sidebar.open {
         transform: translateX(0);
     }
 
+    /* Force Centering */
+    .sidebar-logo {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .sidebar-header {
+        padding: var(--spacing-md);
+        display: flex;
+        justify-content: center;
+    }
+
+    .logo-icon {
+        margin: 0;
+        /* Remove potential margins */
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        /* Glow effect for logo */
+    }
+
+    .nav-item {
+        justify-content: center !important;
+        padding: var(--spacing-md) !important;
+        margin: 0 var(--spacing-xs);
+        border-radius: var(--radius-lg);
+    }
+
+    .nav-item svg {
+        margin: 0;
+        min-width: 24px;
+        /* Prevent squashing */
+        min-height: 24px;
+        flex-shrink: 0;
+        /* Critical for flex containers */
+        display: block;
+        /* Ensure it takes space */
+        z-index: 2;
+        /* Ensure it's above background */
+    }
+
+    /* Hiding Elements */
+    .sidebar .logo-text,
+    .sidebar .nav-item span,
+    .sidebar .user-details,
+    .sidebar .logout-btn span {
+        display: none !important;
+    }
+
+    /* Footer Centering */
+    .sidebar-footer {
+        padding: var(--spacing-md);
+        align-items: center;
+    }
+
+    .user-info {
+        padding: 0;
+        background: transparent;
+        justify-content: center;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .logout-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        /* Circle button */
+        border: 1px solid var(--color-border-primary);
+        color: var(--color-accent-danger);
+    }
+
+    /* Content Adjustment */
     .main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
+        width: 100%;
     }
 
     .sidebar.closed~.main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
+    }
+
+    .top-header {
+        padding: 0 var(--spacing-md);
+    }
+
+    .page-content {
+        padding: var(--spacing-md);
+        /* Reduced from 2xl */
     }
 }

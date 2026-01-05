@@ -1,0 +1,173 @@
+.inicio-page {
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.inicio-container {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.inicio-header {
+    margin-bottom: 32px;
+}
+
+.inicio-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+}
+
+.inicio-header p {
+    color: var(--color-text-secondary);
+    font-size: 16px;
+}
+
+.qr-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.qr-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-accent-primary);
+}
+
+.qr-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 18px;
+}
+
+.qr-wrapper {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.qr-code-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-details-card {
+    background: var(--color-bg-tertiary);
+    padding: 16px;
+    border-radius: 12px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--color-text-primary);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.detail-row.cedula {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-family: monospace;
+}
+
+.qr-instruction {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 80%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+    .inicio-page {
+        padding: 0;
+        align-items: flex-start;
+        /* Move up */
+        min-height: 70vh;
+        /* Allow it to be smaller */
+        padding-top: 10px;
+    }
+
+    .inicio-header {
+        margin-bottom: 20px;
+    }
+
+    .inicio-header h1 {
+        font-size: 22px;
+        margin-bottom: 4px;
+    }
+
+    .inicio-header p {
+        font-size: 14px;
+    }
+
+    .qr-card {
+        padding: 20px;
+        /* Reduced from 32px */
+        border-radius: 16px;
+    }
+
+    .qr-header {
+        margin-bottom: 16px;
+        font-size: 16px;
+    }
+
+    .qr-wrapper {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+
+    /* Responsive QR Code Size */
+    .qr-code-box svg {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 180px;
+        /* Ensure it fits */
+    }
+
+    .user-details-card {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .qr-instruction {
+        font-size: 12px;
+    }
+}
