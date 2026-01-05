@@ -11,6 +11,7 @@ import Ventas from './pages/Ventas';
 import Usuarios from './pages/Usuarios';
 import Gimnasios from './pages/Gimnasios';
 import Sucursales from './pages/Sucursales';
+import Productos from './pages/Productos';
 import LoadingSpinner from './components/LoadingSpinner';
 import { BranchProvider } from './context/BranchContext'; // Added
 import './App.css';
@@ -106,6 +107,16 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Sucursales />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/productos"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Productos />
               </DashboardLayout>
             </ProtectedRoute>
           }

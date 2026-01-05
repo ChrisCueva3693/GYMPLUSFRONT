@@ -1,105 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserPlus, Edit } from 'lucide-react';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import LoadingSpinner from '../components/LoadingSpinner';
-import RoleGuard from '../components/RoleGuard';
+import { Search, UserPlus, Edit, Users, X, Save } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/apiClient';
-import toast from 'react-hot-toast';
-import './Membresias.css'; // Reusing styles
+import toast, { Toaster } from 'react-hot-toast';
+import './Usuarios.css';
 
 const Usuarios = () => {
     const { user } = useAuth();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedGym, setSelectedGym] = useState('');
-    const [selectedBranch, setSelectedBranch] = useState('');
 
-    // Migration state
-    const [showMigrationModal, setShowMigrationModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [availableBranches, setAvailableBranches] = useState([]);
-    const [migrationData, setMigrationData] = useState({ idSucursal: '', notas: '' });
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentUsuario, setCurrentUsuario] = useState({
+        nombre: '',
+        apellido: '',
+        email: '',
+        username: '',
+        password: '',
+        telefono: '',
+        cedula: '',
+        cedulaTipo: 'CEDULA',
+        roles: ['CLIENTE'],
+        idGimnasio: null,
+        idSucursalPorDefecto: null
+    });
+
+    // Roles that ADMIN can assign (not DEV)
+    const availableRoles = user?.roles?.includes('DEV')
+        ? ['DEV', 'ADMIN', 'CLIENTE']
+        : ['ADMIN', 'CLIENTE'];
 
     useEffect(() => {
         loadUsuarios();
-        loadBranchesForMigration();
     }, []);
-
-    const loadBranchesForMigration = async () => {
-        try {
-            const response = await apiClient.get('/api/sucursales');
-            // Filter branches: ADMIN can only migrate to branches they manage
-            let branches = response.data;
-            if (user?.roles?.includes('ADMIN') && user.idGimnasio) {
-                branches = branches.filter(b => b.idGimnasio === user.idGimnasio);
-            }
-            setAvailableBranches(branches);
-        } catch (error) {
-            console.error('Error loading branches', error);
-        }
-    };
-
-    const openMigrationModal = (usuario) => {
-        setSelectedUser(usuario);
-        // Filter out user's current branch from options
-        // const branches = availableBranches.filter(b => b.id !== usuario.idSucursalPorDefecto);
-        // setAvailableBranches(branches); // better to keep all but disable? simple filter is ok.
-        setMigrationData({ idSucursal: '', notas: '' });
-        setShowMigrationModal(true);
-    };
-
-    const handleMigrationSubmit = async (e) => {
-        e.preventDefault();
-        if (!selectedUser || !migrationData.idSucursal) return;
-
-        try {
-            await apiClient.post(`/api/usuarios/${selectedUser.id}/vincular-sucursal`, {
-                idSucursal: Number(migrationData.idSucursal),
-                notas: migrationData.notas
-            });
-            toast.success('Usuario migrado exitosamente');
-            setShowMigrationModal(false);
-            loadUsuarios(); // Reload list
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Error al migrar usuario');
-        }
-    };
 
     const loadUsuarios = async () => {
         setLoading(true);
         try {
             let response;
-
-            // Si es DEV, puede ver todos los usuarios
             if (user?.roles?.includes('DEV')) {
                 response = await apiClient.get('/api/usuarios');
-            }
-            // Si es ADMIN, solo ve usuarios de su sucursal
-            else if (user?.roles?.includes('ADMIN')) {
+            } else if (user?.roles?.includes('ADMIN')) {
                 if (user.idSucursalPorDefecto) {
                     response = await apiClient.get(`/api/usuarios/sucursal/${user.idSucursalPorDefecto}`);
                 } else {
-                    // Si no tiene sucursal asignada, no ve usuarios
                     setUsuarios([]);
                     setLoading(false);
-                    toast.error('No tienes una sucursal asignada', { icon: '⚠️' });
+                    toast.error('No tienes una sucursal asignada');
                     return;
                 }
-            }
-            // Otros roles no ven usuarios
-            else {
+            } else {
                 setUsuarios([]);
                 setLoading(false);
                 return;
             }
-
             setUsuarios(response.data);
         } catch (error) {
-            console.error('Error al cargar usuarios:', error);
+            console.error('Error loading usuarios:', error);
             toast.error('Error al cargar usuarios');
         } finally {
             setLoading(false);
@@ -108,178 +68,314 @@ const Usuarios = () => {
 
     const filteredUsuarios = usuarios.filter(u => {
         const matchesSearch = !searchTerm ||
-            u.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            u.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (u.cedula && u.cedula.includes(searchTerm));
-
+            u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.cedula?.includes(searchTerm);
         return matchesSearch;
     });
 
-    if (loading) {
-        return <LoadingSpinner fullScreen />;
-    }
+    const handleOpenModal = (usuario = null) => {
+        if (usuario) {
+            setIsEditing(true);
+            setCurrentUsuario({
+                id: usuario.id,
+                nombre: usuario.nombre || '',
+                apellido: usuario.apellido || '',
+                email: usuario.email || '',
+                username: usuario.username || '',
+                password: '', // Don't show password
+                telefono: usuario.telefono || '',
+                cedula: usuario.cedula || '',
+                cedulaTipo: usuario.cedulaTipo || 'CEDULA',
+                roles: usuario.roles || ['CLIENTE'],
+                idGimnasio: usuario.idGimnasio || user?.idGimnasio,
+                idSucursalPorDefecto: usuario.idSucursalPorDefecto || user?.idSucursalPorDefecto
+            });
+        } else {
+            setIsEditing(false);
+            setCurrentUsuario({
+                nombre: '',
+                apellido: '',
+                email: '',
+                username: '',
+                password: '',
+                telefono: '',
+                cedula: '',
+                cedulaTipo: 'CEDULA',
+                roles: ['CLIENTE'],
+                idGimnasio: user?.idGimnasio,
+                idSucursalPorDefecto: user?.idSucursalPorDefecto
+            });
+        }
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setIsEditing(false);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                ...currentUsuario,
+                idGimnasio: currentUsuario.idGimnasio || user?.idGimnasio,
+                idSucursalPorDefecto: currentUsuario.idSucursalPorDefecto || user?.idSucursalPorDefecto
+            };
+
+            // Remove password if empty (for update)
+            if (isEditing && !payload.password) {
+                delete payload.password;
+            }
+
+            if (isEditing) {
+                await apiClient.put(`/api/usuarios/${currentUsuario.id}`, payload);
+                toast.success('Usuario actualizado');
+            } else {
+                await apiClient.post('/api/usuarios', payload);
+                toast.success('Usuario creado');
+            }
+            closeModal();
+            loadUsuarios();
+        } catch (error) {
+            console.error('Error saving usuario:', error);
+            const errorMsg = error.response?.data?.message || error.response?.data || 'Error al guardar';
+            toast.error(typeof errorMsg === 'string' ? errorMsg : 'Error al guardar usuario');
+        }
+    };
+
+    const getRoleBadgeClass = (role) => {
+        switch (role?.toUpperCase()) {
+            case 'DEV': return 'dev';
+            case 'ADMIN': return 'admin';
+            default: return 'cliente';
+        }
+    };
 
     return (
-        <div className="membresias-page">
-            <div className="page-header">
-                <div>
-                    <h1>Gestión de Usuarios</h1>
-                    <p className="text-secondary">
-                        Total: {filteredUsuarios.length} usuarios
-                    </p>
-                </div>
-                <RoleGuard allowedRoles={['DEV', 'ADMIN']}>
-                    <Button
-                        variant="primary"
-                        size="md"
-                        onClick={() => toast('Función en desarrollo', { icon: 'ℹ️' })}
-                    >
-                        <UserPlus size={20} />
-                        Nuevo Usuario
-                    </Button>
-                </RoleGuard>
-            </div>
-            {/* Modal de Migración */}
-            {showMigrationModal && selectedUser && (
-                <div className="modal-overlay" onClick={() => setShowMigrationModal(false)}>
-                    <Card className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%' }}>
-                        <h2>Migrar Usuario de Sucursal</h2>
-                        <p className="text-secondary" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            Estás a punto de migrar al usuario <strong>{selectedUser.nombre} {selectedUser.apellido}</strong> a una nueva sucursal.
-                        </p>
+        <div className="usuarios-page">
+            <Toaster position="top-right" />
 
-                        <form onSubmit={handleMigrationSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: 'var(--spacing-sm)', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
-                                    Sucursal Destino *
-                                </label>
-                                <select
-                                    value={migrationData.idSucursal}
-                                    onChange={(e) => setMigrationData({ ...migrationData, idSucursal: e.target.value })}
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: 'var(--spacing-md)',
-                                        background: 'var(--color-bg-secondary)',
-                                        border: '1px solid var(--color-border-primary)',
-                                        borderRadius: 'var(--radius-md)',
-                                        color: 'var(--color-text-primary)',
-                                        fontSize: '0.95rem',
-                                    }}
-                                >
-                                    <option value="">Seleccionar nueva sucursal...</option>
-                                    {availableBranches.map(b => (
-                                        <option key={b.id} value={b.id}>{b.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <Input
-                                label="Notas / Motivo"
-                                type="text"
-                                value={migrationData.notas}
-                                onChange={(e) => setMigrationData({ ...migrationData, notas: e.target.value })}
-                                placeholder="Razón del cambio..."
-                                fullWidth
-                            />
-
-                            <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-                                <Button type="button" variant="ghost" onClick={() => setShowMigrationModal(false)} fullWidth>
-                                    Cancelar
-                                </Button>
-                                <Button type="submit" variant="primary" fullWidth loading={loading}>
-                                    Confirmar Migración
-                                </Button>
-                            </div>
-                        </form>
-                    </Card>
-                </div>
-            )}
-            <Card className="animate-fadeIn" style={{ padding: 'var(--spacing-xl)', marginBottom: 'var(--spacing-2xl)' }}>
-                <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1', minWidth: '250px' }}>
-                        <Input
-                            type="text"
-                            placeholder="Buscar por nombre, email o cédula..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            icon={<Search size={20} />}
-                            fullWidth
-                        />
+            {/* Header */}
+            <div className="usuarios-header">
+                <div className="usuarios-header-title">
+                    <Users size={28} color="var(--color-accent-primary)" />
+                    <div>
+                        <h1>Gestión de Usuarios</h1>
+                        <p>Total: {filteredUsuarios.length} usuarios</p>
                     </div>
                 </div>
-            </Card>
-
-            <div className="membresias-grid">
-                {filteredUsuarios.length === 0 ? (
-                    <Card className="empty-state">
-                        <Filter size={64} />
-                        <h3>No se encontraron usuarios</h3>
-                        <p>Ajusta los filtros de búsqueda</p>
-                    </Card>
-                ) : (
-                    filteredUsuarios.map((usuario, index) => (
-                        <Card
-                            key={usuario.id}
-                            className="membresia-card animate-fadeIn"
-                            style={{ animationDelay: `${index * 30}ms` }}
-                            hover
-                        >
-                            <div className="membresia-header">
-                                <div className="user-avatar-sm">
-                                    {usuario.nombre.charAt(0)}{usuario.apellido.charAt(0)}
-                                </div>
-                                <div className="membresia-user">
-                                    <h3>{usuario.nombre} {usuario.apellido}</h3>
-                                    <p className="text-tertiary">{usuario.email}</p>
-                                </div>
-                            </div>
-
-                            {usuario.cedula ? (
-                                <div className="status-badge badge-success">
-                                    📋 {usuario.cedula}
-                                </div>
-                            ) : (
-                                <div className="status-badge badge-warning">
-                                    ⚠️ Sin cédula
-                                </div>
-                            )}
-
-                            <div className="membresia-dates">
-                                <div className="date-row">
-                                    <span className="date-label">Username:</span>
-                                    <span className="date-value">{usuario.username}</span>
-                                </div>
-                                {usuario.telefono && (
-                                    <div className="date-row">
-                                        <span className="date-label">Teléfono:</span>
-                                        <span className="date-value">{usuario.telefono}</span>
-                                    </div>
-                                )}
-                                <div className="date-row">
-                                    <span className="date-label">Roles:</span>
-                                    <span className="date-value">
-                                        {usuario.roles?.join(', ') || 'N/A'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <RoleGuard allowedRoles={['DEV', 'ADMIN']}>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    fullWidth
-                                    onClick={() => toast('Editar usuario - Función en desarrollo', { icon: 'ℹ️' })}
-                                >
-                                    <Edit size={16} />
-                                    Editar
-                                </Button>
-                            </RoleGuard>
-                        </Card>
-                    ))
-                )}
+                <button className="usuarios-btn-new" onClick={() => handleOpenModal()}>
+                    <UserPlus size={18} />
+                    Nuevo Usuario
+                </button>
             </div>
+
+            {/* Search Bar */}
+            <div className="usuarios-search">
+                <Search size={18} />
+                <input
+                    type="text"
+                    placeholder="Buscar por nombre, email o cédula..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+
+            {/* Table */}
+            {loading ? (
+                <div className="usuarios-loading">
+                    <div className="spinner"></div>
+                </div>
+            ) : (
+                <div className="usuarios-table-container">
+                    {filteredUsuarios.length > 0 ? (
+                        <table className="usuarios-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Username</th>
+                                    <th>Cédula</th>
+                                    <th>Rol</th>
+                                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredUsuarios.map((usuario) => (
+                                    <tr key={usuario.id}>
+                                        <td>
+                                            <div className="usuario-name-cell">
+                                                <div className="usuario-avatar">
+                                                    {usuario.nombre?.charAt(0)}{usuario.apellido?.charAt(0)}
+                                                </div>
+                                                <div className="usuario-info">
+                                                    <span className="name">{usuario.nombre} {usuario.apellido}</span>
+                                                    <span className="email">{usuario.email}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span style={{ color: 'var(--color-text-tertiary)' }}>@{usuario.username}</span>
+                                        </td>
+                                        <td>
+                                            {usuario.cedula || <span style={{ color: 'var(--color-text-muted)' }}>—</span>}
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                {usuario.roles?.map(role => (
+                                                    <span key={role} className={`role-badge ${getRoleBadgeClass(role)}`}>
+                                                        {role}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="usuario-actions">
+                                                <button className="btn-edit" onClick={() => handleOpenModal(usuario)} title="Editar">
+                                                    <Edit size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="usuarios-empty">
+                            <Users size={48} />
+                            <p>No se encontraron usuarios</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="usuarios-modal-overlay" onClick={closeModal}>
+                    <div className="usuarios-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="usuarios-modal-header">
+                            <div className="usuarios-modal-header-info">
+                                <div className="usuarios-modal-header-icon">
+                                    {isEditing ? <Edit size={20} /> : <UserPlus size={20} />}
+                                </div>
+                                <div>
+                                    <h2>{isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
+                                    <p>{isEditing ? 'Modifica los datos' : 'Ingresa la información'}</p>
+                                </div>
+                            </div>
+                            <button className="usuarios-modal-close" onClick={closeModal}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="usuarios-modal-body">
+                                <div className="usuarios-form-row">
+                                    <div className="usuarios-form-group">
+                                        <label>Nombre *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Juan"
+                                            value={currentUsuario.nombre}
+                                            onChange={(e) => setCurrentUsuario({ ...currentUsuario, nombre: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="usuarios-form-group">
+                                        <label>Apellido *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Pérez"
+                                            value={currentUsuario.apellido}
+                                            onChange={(e) => setCurrentUsuario({ ...currentUsuario, apellido: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="usuarios-form-group">
+                                    <label>Email *</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        placeholder="correo@ejemplo.com"
+                                        value={currentUsuario.email}
+                                        onChange={(e) => setCurrentUsuario({ ...currentUsuario, email: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="usuarios-form-row">
+                                    <div className="usuarios-form-group">
+                                        <label>Username *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="usuario123"
+                                            value={currentUsuario.username}
+                                            onChange={(e) => setCurrentUsuario({ ...currentUsuario, username: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="usuarios-form-group">
+                                        <label>{isEditing ? 'Nueva Contraseña' : 'Contraseña *'}</label>
+                                        <input
+                                            type="password"
+                                            required={!isEditing}
+                                            placeholder={isEditing ? 'Dejar vacío para no cambiar' : '••••••••'}
+                                            value={currentUsuario.password}
+                                            onChange={(e) => setCurrentUsuario({ ...currentUsuario, password: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="usuarios-form-row">
+                                    <div className="usuarios-form-group">
+                                        <label>Cédula</label>
+                                        <input
+                                            type="text"
+                                            placeholder="1234567890"
+                                            value={currentUsuario.cedula}
+                                            onChange={(e) => setCurrentUsuario({ ...currentUsuario, cedula: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="usuarios-form-group">
+                                        <label>Teléfono</label>
+                                        <input
+                                            type="text"
+                                            placeholder="+593 99 999 9999"
+                                            value={currentUsuario.telefono}
+                                            onChange={(e) => setCurrentUsuario({ ...currentUsuario, telefono: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="usuarios-form-group">
+                                    <label>Rol *</label>
+                                    <select
+                                        value={currentUsuario.roles?.[0] || 'CLIENTE'}
+                                        onChange={(e) => setCurrentUsuario({ ...currentUsuario, roles: [e.target.value] })}
+                                    >
+                                        {availableRoles.map(role => (
+                                            <option key={role} value={role}>{role}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="usuarios-modal-footer">
+                                <button type="button" className="usuarios-btn-cancel" onClick={closeModal}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="usuarios-btn-submit">
+                                    <Save size={16} />
+                                    {isEditing ? 'Guardar' : 'Crear'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

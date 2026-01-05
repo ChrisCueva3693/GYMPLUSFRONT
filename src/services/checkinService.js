@@ -62,7 +62,7 @@ const checkinService = {
         const allMembresias = membresiasResponse.data;
 
         // Filter memberships for this user
-        const userMembresias = allMembresias.filter(m => m.usuarioId === user.id);
+        const userMembresias = allMembresias.filter(m => m.clienteId === user.id);
 
         // Find active membership
         const activeMembership = userMembresias.find(m => m.estado === 'ACTIVA');

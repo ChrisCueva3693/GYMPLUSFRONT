@@ -11,7 +11,8 @@ import {
     MapPin,
     LogOut,
     Menu,
-    X
+    X,
+    Package
 } from 'lucide-react';
 import './DashboardLayout.css';
 import BranchSelector from '../components/BranchSelector';
@@ -35,6 +36,7 @@ const DashboardLayout = ({ children }) => {
         { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN'] },
         { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
         { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV', 'ADMIN'] },
+        { path: '/productos', icon: Package, label: 'Productos', roles: ['DEV', 'ADMIN'] },
     ];
 
     const isActive = (path) => {

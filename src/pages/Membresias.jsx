@@ -1,176 +1,285 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, XCircle } from 'lucide-react';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { CreditCard, Plus, X, Calendar, User, CheckCircle, XCircle } from 'lucide-react';
+import apiClient from '../services/apiClient';
 import membresiaService from '../services/membresiaService';
-import { format, differenceInDays } from 'date-fns';
+import toast, { Toaster } from 'react-hot-toast';
+import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import toast from 'react-hot-toast';
 import './Membresias.css';
 
 const Membresias = () => {
     const [membresias, setMembresias] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, active, expired, expiring
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [clientes, setClientes] = useState([]);
+    const [tiposMembresia, setTiposMembresia] = useState([]);
+    const [tiposPago, setTiposPago] = useState([]);
+
+    // New Membresia Form
+    const [selectedCliente, setSelectedCliente] = useState('');
+    const [selectedTipoMembresia, setSelectedTipoMembresia] = useState('');
+    const [selectedTipoPago, setSelectedTipoPago] = useState('');
+    const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split('T')[0]);
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        loadMembresias();
+        fetchMembresias();
     }, []);
 
-    const loadMembresias = async () => {
-        setLoading(true);
+    const fetchMembresias = async () => {
         try {
+            setLoading(true);
             const data = await membresiaService.getMembresias();
             setMembresias(data);
         } catch (error) {
+            console.error('Error fetching membresias:', error);
             toast.error('Error al cargar membresías');
         } finally {
             setLoading(false);
         }
     };
 
-    const getFilteredMembresias = () => {
-        const today = new Date();
+    const openModal = async () => {
+        try {
+            const [clientesRes, tiposMembresiaRes, tiposPagoRes] = await Promise.all([
+                apiClient.get('/api/usuarios'),
+                apiClient.get('/api/tipos-membresia'),
+                apiClient.get('/api/tipos-pago')
+            ]);
 
-        return membresias.filter(m => {
-            if (filter === 'active') {
-                return m.estado === 'ACTIVA';
-            } else if (filter === 'expired') {
-                if (!m.fechaFin) return false;
-                return new Date(m.fechaFin) < today;
-            } else if (filter === 'expiring') {
-                if (!m.fechaFin || m.estado !== 'ACTIVA') return false;
-                const daysRemaining = differenceInDays(new Date(m.fechaFin), today);
-                return daysRemaining >= 0 && daysRemaining <= 7;
-            }
-            return true;
-        });
-    };
+            setClientes(clientesRes.data);
+            setTiposMembresia(tiposMembresiaRes.data);
+            setTiposPago(tiposPagoRes.data);
 
-    const getMembershipStatusInfo = (membresia) => {
-        if (!membresia.fechaFin) {
-            return { label: 'Sin Fecha', color: 'gray', icon: Calendar };
-        }
+            // Reset form
+            setSelectedCliente('');
+            setSelectedTipoMembresia('');
+            setSelectedTipoPago('');
+            setFechaInicio(new Date().toISOString().split('T')[0]);
 
-        const today = new Date();
-        const endDate = new Date(membresia.fechaFin);
-        const daysRemaining = differenceInDays(endDate, today);
-
-        if (daysRemaining < 0) {
-            return { label: 'Vencida', color: 'danger', icon: XCircle };
-        } else if (daysRemaining <= 7) {
-            return { label: `Vence en ${daysRemaining} días`, color: 'warning', icon: Calendar };
-        } else {
-            return { label: `${daysRemaining} días restantes`, color: 'success', icon: CheckCircle };
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error loading modal data:', error);
+            toast.error('Error al cargar datos');
         }
     };
 
-    const filteredMembresias = getFilteredMembresias();
+    const closeModal = () => {
+        setIsModalOpen(false);
+    };
 
-    if (loading) {
-        return <LoadingSpinner fullScreen />;
-    }
+    const getSelectedPlanDetails = () => {
+        if (!selectedTipoMembresia) return null;
+        return tiposMembresia.find(tm => tm.id === parseInt(selectedTipoMembresia));
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedCliente || !selectedTipoMembresia || !selectedTipoPago || !fechaInicio) {
+            toast.error('Complete todos los campos requeridos');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const request = {
+                clienteId: parseInt(selectedCliente),
+                tipoMembresiaId: parseInt(selectedTipoMembresia),
+                tipoPagoId: parseInt(selectedTipoPago),
+                fechaInicio: fechaInicio
+            };
+
+            await membresiaService.createMembresia(request);
+            toast.success('Membresía creada exitosamente');
+            closeModal();
+            fetchMembresias();
+        } catch (error) {
+            console.error('Error creating membresia:', error);
+            const msg = error.response?.data?.message || 'Error al procesar membresía';
+            toast.error(msg);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const planDetails = getSelectedPlanDetails();
+    const fechaFinCalculada = planDetails && fechaInicio
+        ? format(addDays(new Date(fechaInicio), planDetails.duracionDias), 'yyyy-MM-dd')
+        : '';
 
     return (
         <div className="membresias-page">
-            <div className="page-header">
-                <div>
-                    <h1>Gestión de Membresías</h1>
-                    <p className="text-secondary">
-                        Total: {filteredMembresias.length} membresías
-                    </p>
+            <Toaster position="top-right" />
+
+            {/* Header */}
+            <div className="membresias-header">
+                <div className="membresias-header-title">
+                    <CreditCard size={28} color="var(--color-accent-primary)" />
+                    <div>
+                        <h1>Membresías</h1>
+                        <p>Gestiona las suscripciones de los clientes</p>
+                    </div>
                 </div>
-                <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => toast.info('Función en desarrollo')}
-                >
-                    <Plus size={20} />
+                <button className="membresias-btn-new" onClick={openModal}>
+                    <Plus size={18} />
                     Nueva Membresía
-                </Button>
-            </div>
-
-            <div className="filter-tabs">
-                <button
-                    className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-                    onClick={() => setFilter('all')}
-                >
-                    Todas
-                </button>
-                <button
-                    className={`filter-tab ${filter === 'active' ? 'active' : ''}`}
-                    onClick={() => setFilter('active')}
-                >
-                    Activas
-                </button>
-                <button
-                    className={`filter-tab ${filter === 'expiring' ? 'active' : ''}`}
-                    onClick={() => setFilter('expiring')}
-                >
-                    Por vencer
-                </button>
-                <button
-                    className={`filter-tab ${filter === 'expired' ? 'active' : ''}`}
-                    onClick={() => setFilter('expired')}
-                >
-                    Vencidas
                 </button>
             </div>
 
-            <div className="membresias-grid">
-                {filteredMembresias.length === 0 ? (
-                    <Card className="empty-state">
-                        <Calendar size={64} />
-                        <h3>No hay membresías</h3>
-                        <p>No se encontraron membresías con los filtros seleccionados</p>
-                    </Card>
-                ) : (
-                    filteredMembresias.map((membresia, index) => {
-                        const statusInfo = getMembershipStatusInfo(membresia);
-                        return (
-                            <Card
-                                key={membresia.id}
-                                className="membresia-card animate-fadeIn"
-                                style={{ animationDelay: `${index * 50}ms` }}
-                                hover
-                            >
-                                <div className="membresia-header">
-                                    <div className="user-avatar-sm">
-                                        <User size={20} />
-                                    </div>
-                                    <div className="membresia-user">
-                                        <h3>Usuario #{membresia.usuarioId}</h3>
-                                        <p className="text-tertiary">{membresia.tipoMembresiaNombre || 'Membresía'}</p>
-                                    </div>
-                                </div>
-
-                                <div className={`status-badge badge-${statusInfo.color}`}>
-                                    <statusInfo.icon size={16} />
-                                    <span>{statusInfo.label}</span>
-                                </div>
-
-                                <div className="membresia-dates">
-                                    <div className="date-row">
-                                        <span className="date-label">Inicio:</span>
-                                        <span className="date-value">
-                                            {format(new Date(membresia.fechaInicio), "d MMM yyyy", { locale: es })}
-                                        </span>
-                                    </div>
-                                    {membresia.fechaFin && (
-                                        <div className="date-row">
-                                            <span className="date-label">Fin:</span>
-                                            <span className="date-value">
-                                                {format(new Date(membresia.fechaFin), "d MMM yyyy", { locale: es })}
+            {/* Table */}
+            {loading ? (
+                <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                    <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid #ccc', borderTopColor: 'var(--color-accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                </div>
+            ) : (
+                <div className="membresias-table-container">
+                    {membresias.length > 0 ? (
+                        <table className="membresias-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Plan</th>
+                                    <th>Inicio</th>
+                                    <th>Fin</th>
+                                    <th>Precio</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {membresias.map((m) => (
+                                    <tr key={m.id}>
+                                        <td>#{m.id}</td>
+                                        <td>{m.clienteNombre}</td>
+                                        <td>{m.tipoMembresiaNombre}</td>
+                                        <td>{format(new Date(m.fechaInicio), 'dd MMM yyyy', { locale: es })}</td>
+                                        <td>{format(new Date(m.fechaFin), 'dd MMM yyyy', { locale: es })}</td>
+                                        <td style={{ fontWeight: 600 }}>${m.precio?.toFixed(2)}</td>
+                                        <td>
+                                            <span className={`status-badge ${m.estado === 'ACTIVA' ? 'badge-success' : 'badge-gray'}`}>
+                                                {m.estado === 'ACTIVA' ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                                                {m.estado}
                                             </span>
-                                        </div>
-                                    )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                            <CreditCard size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                            <p>No hay membresías registradas</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="membresias-modal-overlay" onClick={closeModal}>
+                    <div className="membresias-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="membresias-modal-header">
+                            <h2><CreditCard size={20} /> Nueva Membresía</h2>
+                            <button className="membresias-modal-close" onClick={closeModal}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="membresias-modal-body">
+                            <div className="membresias-form-group">
+                                <label>Cliente *</label>
+                                <select
+                                    value={selectedCliente}
+                                    onChange={(e) => setSelectedCliente(e.target.value)}
+                                >
+                                    <option value="">Seleccionar cliente...</option>
+                                    {clientes.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.nombre} {c.apellido} ({c.username})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="membresias-form-group">
+                                <label>Plan / Tipo de Membresía *</label>
+                                <select
+                                    value={selectedTipoMembresia}
+                                    onChange={(e) => setSelectedTipoMembresia(e.target.value)}
+                                >
+                                    <option value="">Seleccionar plan...</option>
+                                    {tiposMembresia.map(tm => (
+                                        <option key={tm.id} value={tm.id}>
+                                            {tm.nombre} - ${tm.precioBase} ({tm.duracionDias} días)
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="membresias-form-group">
+                                <label>Fecha de Inicio *</label>
+                                <input
+                                    type="date"
+                                    value={fechaInicio}
+                                    onChange={(e) => setFechaInicio(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="membresias-form-group">
+                                <label>Forma de Pago *</label>
+                                <select
+                                    value={selectedTipoPago}
+                                    onChange={(e) => setSelectedTipoPago(e.target.value)}
+                                >
+                                    <option value="">Seleccionar forma de pago...</option>
+                                    {tiposPago.map(tp => (
+                                        <option key={tp.id} value={tp.id}>
+                                            {tp.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {planDetails && (
+                                <div className="membership-summary">
+                                    <div className="summary-row">
+                                        <span>Plan Seleccionado:</span>
+                                        <span>{planDetails.nombre}</span>
+                                    </div>
+                                    <div className="summary-row">
+                                        <span>Duración:</span>
+                                        <span>{planDetails.duracionDias} días</span>
+                                    </div>
+                                    <div className="summary-row">
+                                        <span>Vencimiento estimado:</span>
+                                        <span>{fechaFinCalculada}</span>
+                                    </div>
+                                    <div className="summary-row total">
+                                        <span>Total a Pagar:</span>
+                                        <span>${planDetails.precioBase.toFixed(2)}</span>
+                                    </div>
                                 </div>
-                            </Card>
-                        );
-                    })
-                )}
-            </div>
+                            )}
+                        </div>
+
+                        <div className="membresias-modal-footer">
+                            <button type="button" className="membresias-btn-cancel" onClick={closeModal}>
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                className="membresias-btn-submit"
+                                onClick={handleSubmit}
+                                disabled={submitting}
+                            >
+                                <CreditCard size={16} />
+                                {submitting ? 'Procesando...' : 'Crear Membresía'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,12 +1,12 @@
-/* Membresias Page Styles */
-.membresias-page {
+/* Ventas Page Styles */
+.ventas-page {
     padding: var(--spacing-xl);
     padding-top: 6rem;
     min-height: 100vh;
     background: var(--color-bg-primary);
 }
 
-.membresias-header {
+.ventas-header {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -15,19 +15,19 @@
 }
 
 @media (min-width: 768px) {
-    .membresias-header {
+    .ventas-header {
         flex-direction: row;
         justify-content: space-between;
     }
 }
 
-.membresias-header-title {
+.ventas-header-title {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
 }
 
-.membresias-header-title h1 {
+.ventas-header-title h1 {
     font-size: 1.875rem;
     font-weight: 700;
     background: var(--gradient-primary);
@@ -36,13 +36,13 @@
     background-clip: text;
 }
 
-.membresias-header-title p {
+.ventas-header-title p {
     color: var(--color-text-muted);
     font-size: 0.875rem;
     margin-top: 0.25rem;
 }
 
-.membresias-btn-new {
+.ventas-btn-new {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -57,25 +57,25 @@
     box-shadow: var(--shadow-md);
 }
 
-.membresias-btn-new:hover {
+.ventas-btn-new:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 /* Table Container */
-.membresias-table-container {
+.ventas-table-container {
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border-primary);
     border-radius: var(--radius-xl);
     overflow: hidden;
 }
 
-.membresias-table {
+.ventas-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.membresias-table th {
+.ventas-table th {
     text-align: left;
     padding: var(--spacing-md) var(--spacing-lg);
     background: var(--color-bg-tertiary);
@@ -87,53 +87,70 @@
     border-bottom: 1px solid var(--color-border-primary);
 }
 
-.membresias-table td {
+.ventas-table td {
     padding: var(--spacing-md) var(--spacing-lg);
     border-bottom: 1px solid var(--color-border-primary);
     vertical-align: middle;
 }
 
-.membresias-table tr:last-child td {
+.ventas-table tr:last-child td {
     border-bottom: none;
 }
 
-.membresias-table tr:hover {
+.ventas-table tr:hover {
     background: rgba(59, 130, 246, 0.05);
 }
 
-/* Status Badges */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+/* Estado Badge */
+.estado-badge {
+    display: inline-block;
     padding: 4px 10px;
     border-radius: var(--radius-full);
     font-size: 0.75rem;
     font-weight: 600;
 }
 
-.badge-success {
+.estado-badge.completada {
     background: rgba(16, 185, 129, 0.15);
     color: var(--color-accent-success);
 }
 
-.badge-warning {
+.estado-badge.pendiente {
     background: rgba(245, 158, 11, 0.15);
     color: #f59e0b;
 }
 
-.badge-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--color-accent-danger);
+/* Loading & Empty */
+.ventas-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
 }
 
-.badge-gray {
-    background: rgba(107, 114, 128, 0.15);
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-border-primary);
+    border-top-color: var(--color-accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ventas-empty {
+    text-align: center;
+    padding: var(--spacing-3xl) var(--spacing-lg);
     color: var(--color-text-muted);
 }
 
 /* Modal */
-.membresias-modal-overlay {
+.ventas-modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
@@ -145,17 +162,17 @@
     padding: var(--spacing-md);
 }
 
-.membresias-modal {
+.ventas-modal {
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border-primary);
     border-radius: var(--radius-2xl);
     width: 100%;
-    max-width: 600px;
+    max-width: 700px;
     max-height: 90vh;
     overflow-y: auto;
 }
 
-.membresias-modal-header {
+.ventas-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -164,7 +181,7 @@
     background: var(--color-bg-tertiary);
 }
 
-.membresias-modal-header h2 {
+.ventas-modal-header h2 {
     font-size: 1.125rem;
     font-weight: 700;
     color: var(--color-text-primary);
@@ -173,7 +190,7 @@
     gap: var(--spacing-sm);
 }
 
-.membresias-modal-close {
+.ventas-modal-close {
     background: transparent;
     border: none;
     color: var(--color-text-muted);
@@ -182,19 +199,31 @@
     border-radius: var(--radius-md);
 }
 
-.membresias-modal-close:hover {
+.ventas-modal-close:hover {
     background: var(--color-bg-elevated);
 }
 
-.membresias-modal-body {
+.ventas-modal-body {
     padding: var(--spacing-lg);
 }
 
-.membresias-form-group {
+/* Form Sections */
+.ventas-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.ventas-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.ventas-form-group {
     margin-bottom: var(--spacing-md);
 }
 
-.membresias-form-group label {
+.ventas-form-group label {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
@@ -202,8 +231,8 @@
     margin-bottom: var(--spacing-xs);
 }
 
-.membresias-form-group select,
-.membresias-form-group input {
+.ventas-form-group select,
+.ventas-form-group input {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-bg-tertiary);
@@ -213,7 +242,125 @@
     font-size: 0.9rem;
 }
 
-.membresias-modal-footer {
+.ventas-form-group select:focus,
+.ventas-form-group input:focus {
+    outline: none;
+    border-color: var(--color-accent-primary);
+}
+
+/* Product Selector */
+.product-selector {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.product-selector select {
+    flex: 2;
+}
+
+.product-selector input {
+    flex: 1;
+    max-width: 100px;
+}
+
+.product-selector button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--gradient-blue);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Cart */
+.cart-items {
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    min-height: 100px;
+}
+
+.cart-empty {
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: var(--spacing-lg);
+    font-size: 0.9rem;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--color-border-primary);
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-item-info .name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.cart-item-info .details {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.cart-item-subtotal {
+    font-weight: 700;
+    color: var(--color-accent-primary);
+}
+
+.cart-item-remove {
+    background: transparent;
+    border: none;
+    color: var(--color-accent-danger);
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* Total */
+.cart-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--color-accent-primary);
+    margin-top: var(--spacing-md);
+}
+
+.cart-total-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.cart-total-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-accent-primary);
+}
+
+/* Modal Footer */
+.ventas-modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-md);
@@ -222,7 +369,7 @@
     background: var(--color-bg-tertiary);
 }
 
-.membresias-btn-cancel {
+.ventas-btn-cancel {
     padding: var(--spacing-sm) var(--spacing-lg);
     background: transparent;
     border: 1px solid var(--color-border-primary);
@@ -232,11 +379,11 @@
     cursor: pointer;
 }
 
-.membresias-btn-cancel:hover {
+.ventas-btn-cancel:hover {
     background: var(--color-bg-elevated);
 }
 
-.membresias-btn-submit {
+.ventas-btn-submit {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -249,37 +396,12 @@
     cursor: pointer;
 }
 
-.membresias-btn-submit:hover {
+.ventas-btn-submit:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
-.membresias-btn-submit:disabled {
+.ventas-btn-submit:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-/* Summary Box */
-.membership-summary {
-    background: var(--color-bg-tertiary);
-    border: 1px solid var(--color-border-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
-    margin-top: var(--spacing-lg);
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-xs);
-    font-size: 0.9rem;
-}
-
-.summary-row.total {
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--color-border-primary);
-    font-weight: 700;
-    color: var(--color-accent-primary);
-    font-size: 1.1rem;
 }
