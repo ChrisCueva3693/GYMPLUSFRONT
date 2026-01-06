@@ -254,7 +254,7 @@ const Ventas = () => {
                 </button>
             </div>
 
-            {/* Table */}
+            {/* Table & Mobile Cards */}
             {loading ? (
                 <div className="ventas-loading">
                     <div className="spinner"></div>
@@ -262,43 +262,68 @@ const Ventas = () => {
             ) : (
                 <div className="ventas-table-container">
                     {ventas.length > 0 ? (
-                        <table className="ventas-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {ventas.map((venta) => (
-                                    <tr key={venta.id}>
-                                        <td>#{venta.id}</td>
-                                        <td>{venta.clienteNombre}</td>
-                                        <td>{formatDate(venta.fechaVenta)}</td>
-                                        <td style={{ fontWeight: 700, color: 'var(--color-accent-primary)' }}>
-                                            ${venta.total?.toFixed(2)}
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
-                                                    {venta.estado}
-                                                </span>
-                                                <button
-                                                    className="icon-btn-view"
-                                                    onClick={() => setSelectedVenta(venta)}
-                                                    title="Ver Detalle"
-                                                >
-                                                    <Eye size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
+                        <>
+                            <table className="ventas-table desktop-only">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
                                     </tr>
+                                </thead>
+                                <tbody>
+                                    {ventas.map((venta) => (
+                                        <tr key={venta.id}>
+                                            <td>#{venta.id}</td>
+                                            <td>{venta.clienteNombre}</td>
+                                            <td>{formatDate(venta.fechaVenta)}</td>
+                                            <td style={{ fontWeight: 700, color: 'var(--color-accent-primary)' }}>
+                                                ${venta.total?.toFixed(2)}
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
+                                                        {venta.estado}
+                                                    </span>
+                                                    <button
+                                                        className="icon-btn-view"
+                                                        onClick={() => setSelectedVenta(venta)}
+                                                        title="Ver Detalle"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Mobile Card Layout */}
+                            <div className="ventas-mobile-list mobile-only">
+                                {ventas.map((venta) => (
+                                    <div className="venta-card" key={venta.id} onClick={() => setSelectedVenta(venta)}>
+                                        <div className="venta-card-header">
+                                            <div className="venta-id">
+                                                <ShoppingCart size={14} /> <span>Venta #{venta.id}</span>
+                                            </div>
+                                            <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
+                                                {venta.estado}
+                                            </span>
+                                        </div>
+                                        <div className="venta-info-row">
+                                            <div className="client-name">{venta.clienteNombre}</div>
+                                            <div className="venta-total">${venta.total?.toFixed(2)}</div>
+                                        </div>
+                                        <div className="venta-date">
+                                            {formatDate(venta.fechaVenta)}
+                                        </div>
+                                    </div>
                                 ))}
-                            </tbody>
-                        </table>
+                            </div>
+                        </>
                     ) : (
                         <div className="ventas-empty">
                             <ShoppingCart size={48} />

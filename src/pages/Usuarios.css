@@ -428,13 +428,117 @@
     box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Responsive & Mobile Cards */
+.mobile-only {
+    display: none;
+}
 
-    .usuarios-table th:nth-child(3),
-    .usuarios-table td:nth-child(3),
-    .usuarios-table th:nth-child(4),
-    .usuarios-table td:nth-child(4) {
+.desktop-only {
+    display: table;
+    width: 100%;
+}
+
+.usuarios-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.usuario-card {
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.usuario-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.usuario-card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.usuario-card-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.usuario-card-info .email {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.btn-edit-mobile {
+    padding: 8px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-accent-primary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.usuario-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border-primary);
+}
+
+.detail-item {
+    font-size: 14px;
+    color: var(--color-text-primary);
+    display: flex;
+    justify-content: space-between;
+}
+
+.detail-item span {
+    color: var(--color-text-secondary);
+}
+
+.roles-container {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+    .usuarios-page {
+        padding: 16px;
+        padding-top: 80px;
+    }
+
+    .desktop-only {
         display: none;
+    }
+
+    .mobile-only {
+        display: flex;
+    }
+
+    .usuarios-table-container {
+        border: none;
+        background: transparent;
+    }
+
+    .usuarios-header {
+        align-items: stretch;
+    }
+
+    .usuarios-form-row {
+        grid-template-columns: 1fr;
     }
 }

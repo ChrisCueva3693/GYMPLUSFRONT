@@ -544,8 +544,93 @@
     color: var(--color-text-primary);
 }
 
-.no-details {
-    text-align: center;
+padding: 20px;
+}
+
+/* Response Utilities & Mobile Support */
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: table;
+    width: 100%;
+}
+
+.ventas-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.venta-card {
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.venta-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border-primary);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.venta-id {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
     color: var(--color-text-secondary);
-    padding: 20px;
+}
+
+.venta-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.client-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 15px;
+}
+
+.venta-total {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-accent-primary);
+}
+
+.venta-date {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+    .ventas-page {
+        padding: 16px;
+        padding-top: 80px;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .mobile-only {
+        display: flex;
+    }
+
+    .ventas-table-container {
+        border: none;
+        background: transparent;
+    }
 }

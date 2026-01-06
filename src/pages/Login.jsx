@@ -23,6 +23,15 @@ const Login = () => {
         });
     };
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('expired') === 'true') {
+            toast.error("Tu sesión ha expirado. Por favor ingresa nuevamente.");
+            // Clean URL
+            window.history.replaceState({}, document.title, "/login");
+        }
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 

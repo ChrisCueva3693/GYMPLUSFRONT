@@ -267,7 +267,7 @@ const Membresias = () => {
             ) : (
                 <div className="membresias-table-container">
                     {membresias.length > 0 ? (
-                        <table className="membresias-table">
+                        <table className="membresias-table desktop-only">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -304,6 +304,42 @@ const Membresias = () => {
                             <p>No hay membresías registradas</p>
                         </div>
                     )}
+
+                    {/* Mobile Card View */}
+                    <div className="membresias-mobile-list mobile-only">
+                        {membresias.map((m) => (
+                            <div className="membresia-card" key={m.id}>
+                                <div className="card-header">
+                                    <div className="user-info">
+                                        <div className="avatar-placeholder">
+                                            {m.clienteNombre.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3>{m.clienteNombre}</h3>
+                                            <span className="card-subtitle">#{m.id} • {m.tipoMembresiaNombre}</span>
+                                        </div>
+                                    </div>
+                                    <span className={`status-badge ${m.estado === 'ACTIVA' ? 'badge-success' : 'badge-gray'}`}>
+                                        {m.estado}
+                                    </span>
+                                </div>
+                                <div className="card-body">
+                                    <div className="card-row">
+                                        <span><Calendar size={14} /> Inicio:</span>
+                                        <strong>{format(new Date(m.fechaInicio), 'dd MMM', { locale: es })}</strong>
+                                    </div>
+                                    <div className="card-row">
+                                        <span><Calendar size={14} /> Fin:</span>
+                                        <strong>{format(new Date(m.fechaFin), 'dd MMM yyyy', { locale: es })}</strong>
+                                    </div>
+                                    <div className="card-row price-row">
+                                        <span>Precio:</span>
+                                        <span className="price-tag">${m.precio?.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

@@ -116,7 +116,7 @@ const TiposMembresia = () => {
                 <div className="loading-container">Loading...</div>
             ) : (
                 <div className="membresias-table-container">
-                    <table className="membresias-table">
+                    <table className="membresias-table desktop-only">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
@@ -147,6 +147,43 @@ const TiposMembresia = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Mobile Card Layout */}
+                    <div className="membresias-mobile-list mobile-only">
+                        {tipos.map((tipo) => (
+                            <div className="membresia-card" key={tipo.id}>
+                                <div className="card-header">
+                                    <div className="user-info">
+                                        <div className="avatar-placeholder" style={{ background: 'var(--gradient-purple)' }}>
+                                            {tipo.nombre.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3>{tipo.nombre}</h3>
+                                            <span className="card-subtitle">{tipo.duracionDias} días</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button className="icon-btn edit" onClick={() => handleOpenModal(tipo)}>
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button className="icon-btn delete" onClick={() => handleDelete(tipo.id)}>
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="card-body">
+                                    <div className="card-row">
+                                        <span>Descripción:</span>
+                                        <strong>{tipo.descripcion || '-'}</strong>
+                                    </div>
+                                    <div className="card-row price-row">
+                                        <span>Precio Base:</span>
+                                        <span className="price-tag">${parseFloat(tipo.precioBase).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
