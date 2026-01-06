@@ -29,7 +29,7 @@ const CheckIn = () => {
 
     const { selectedBranchId } = useBranch();
 
-    // Toggle Full Screen
+    // Toggle Full Screennn
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().then(() => {
