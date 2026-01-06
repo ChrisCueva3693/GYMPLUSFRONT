@@ -7,6 +7,7 @@ import checkinService from '../services/checkinService';
 import ventaService from '../services/ventaService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useBranch } from '../context/BranchContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -18,9 +19,11 @@ const Dashboard = () => {
     });
     const [loading, setLoading] = useState(true);
 
+    const { selectedBranchId } = useBranch();
+
     useEffect(() => {
         loadStats();
-    }, []);
+    }, [selectedBranchId]);
 
     const loadStats = async () => {
         setLoading(true);
@@ -43,7 +46,11 @@ const Dashboard = () => {
                 // Fix: use fechaEntrada instead of fechaHora
                 const checkInDate = new Date(c.fechaEntrada);
                 checkInDate.setHours(0, 0, 0, 0);
-                return checkInDate.getTime() === today.getTime();
+
+                // Filter by branch if selected
+                const matchesBranch = selectedBranchId ? c.idSucursal === selectedBranchId : true;
+
+                return checkInDate.getTime() === today.getTime() && matchesBranch;
             }).length;
 
             const activeMembresias = membresias.filter(m => m.estado === 'ACTIVA').length;

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle, XCircle, AlertTriangle, Calendar, User } from 'lucide-react';
+import { Search, CheckCircle, XCircle, AlertTriangle, Calendar, User, UserPlus, Maximize2, Minimize2 } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import Card from '../components/Card';
+import UserFormModal from '../components/UserFormModal';
+import CheckInStatusModal from '../components/CheckInStatusModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import userService from '../services/userService';
 import membresiaService from '../services/membresiaService';
 import checkinService from '../services/checkinService';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useBranch } from '../context/BranchContext';
@@ -19,122 +21,150 @@ const CheckIn = () => {
     const [membershipData, setMembershipData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [checkingIn, setCheckingIn] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
+
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+    const [autoCheckInSuccess, setAutoCheckInSuccess] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     const { selectedBranchId } = useBranch();
+
+    // Toggle Full Screen
+    const toggleFullScreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().then(() => {
+                setIsFullScreen(true);
+            }).catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                setIsFullScreen(false);
+            }
+        }
+    };
+
+    useEffect(() => {
+        const handleFullScreenChange = () => {
+            setIsFullScreen(!!document.fullscreenElement);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullScreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullScreenChange);
+        };
+    }, []);
 
     const resetForm = () => {
         setUserId('');
         setUserData(null);
         setMembershipData(null);
-        setShowSuccess(false);
+        setMembershipData(null);
+        setIsStatusModalOpen(false);
+        setAutoCheckInSuccess(false);
+    };
+
+    const performCheckIn = async (user, branchId) => {
+        setCheckingIn(true);
+        try {
+            await checkinService.createCheckIn({
+                idUsuario: user.id,
+                idSucursal: branchId
+            });
+
+            setAutoCheckInSuccess(true);
+            toast.success('¡Check-in registrado exitosamente!');
+
+            // Auto-close and reset
+            setTimeout(() => {
+                resetForm();
+            }, 2500);
+        } catch (error) {
+            toast.error(error.message || 'Error al registrar check-in');
+            // If auto-checkin fails, keep modal open but maybe show error? 
+            // For now, toast is enough, user can try manual button if it wasn't auto
+        } finally {
+            setCheckingIn(false);
+        }
     };
 
     const handleSearch = async (e) => {
         e.preventDefault();
 
         if (!userId.trim()) {
-            toast.error('Por favor ingresa un ID de usuario');
+            toast('Por favor ingresa un número de cédula', {
+                icon: '⚠️',
+                style: { borderRadius: '10px', background: '#333', color: '#fff' },
+            });
             return;
         }
-
-        setLoading(true);
-        try {
-            const result = await checkinService.verifyUser(parseInt(userId));
-            setUserData(result.user);
-            setMembershipData(result.membership);
-        } catch (error) {
-            toast.error(error.message || 'Usuario no encontrado');
-            resetForm();
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleCheckIn = async () => {
-        if (!userData) return;
 
         if (!selectedBranchId) {
             toast.error("No hay una sucursal seleccionada");
             return;
         }
 
-        setCheckingIn(true);
+        setLoading(true);
         try {
-            await checkinService.createCheckIn({
-                idUsuario: userData.id,
-                idSucursal: selectedBranchId
-            });
+            // 1. Verify User
+            const result = await checkinService.verifyUser(parseInt(userId));
+            setUserData(result.user);
+            setMembershipData(result.membership);
 
-            setShowSuccess(true);
-            toast.success('¡Check-in registrado exitosamente!');
+            // 2. Open Modal immediately with info
+            setIsStatusModalOpen(true);
+            setAutoCheckInSuccess(false); // reset status
 
-            // Auto-reset after 3 seconds
-            setTimeout(() => {
-                resetForm();
-            }, 3000);
+            // 3. Auto Check-In if active
+            if (result.membership && result.hasActiveMembership) {
+                // Short delay to let the modal animation start and user see their data
+                setTimeout(() => {
+                    performCheckIn(result.user, selectedBranchId);
+                }, 500);
+            } else {
+                // No membership or expired - Warning toast already handled globally or in UI
+                if (!result.membership) {
+                    toast('Usuario sin membresía activa', {
+                        icon: '⚠️',
+                        style: { borderRadius: '10px', background: '#333', color: '#fff' },
+                    });
+                }
+            }
         } catch (error) {
-            toast.error(error.message || 'Error al registrar check-in');
+            toast.error('Usuario no encontrado. Por favor regístrese si aún no lo está.');
+            setUserData(null);
+            setMembershipData(null);
         } finally {
-            setCheckingIn(false);
+            setLoading(false);
         }
     };
 
-    const getMembershipStatus = () => {
-        if (!membershipData) return null;
-
-        const today = new Date();
-        const endDate = new Date(membershipData.fechaFin);
-        const daysRemaining = differenceInDays(endDate, today);
-
-        if (daysRemaining < 0) {
-            return {
-                status: 'expired',
-                label: 'Vencida',
-                icon: XCircle,
-                color: 'var(--color-accent-danger)',
-            };
-        } else if (daysRemaining <= 7) {
-            return {
-                status: 'expiring',
-                label: 'Próxima a Vencer',
-                icon: AlertTriangle,
-                color: 'var(--color-accent-warning)',
-            };
-        } else {
-            return {
-                status: 'active',
-                label: 'Activa',
-                icon: CheckCircle,
-                color: 'var(--color-accent-success)',
-            };
+    const handleManualCheckIn = () => {
+        if (userData && selectedBranchId) {
+            performCheckIn(userData, selectedBranchId);
         }
     };
 
-    const membershipStatus = membershipData ? getMembershipStatus() : null;
-
-    if (showSuccess) {
-        return (
-            <div className="checkin-success animate-scaleIn">
-                <Card className="success-card glass">
-                    <div className="success-icon">
-                        <CheckCircle size={80} />
-                    </div>
-                    <h1>¡Check-In Exitoso!</h1>
-                    <p>Bienvenido {userData?.nombre} {userData?.apellido}</p>
-                </Card>
-            </div>
-        );
-    }
+    // Helper removed as logic is now in Modal
 
     return (
-        <div className="checkin-page">
+        <div className={`checkin-page ${isFullScreen ? 'fullscreen-mode' : ''}`}>
+            <Toaster position="top-right" />
             <div className="checkin-container">
                 <div className="checkin-header animate-fadeIn">
                     <User size={48} />
-                    <h1>Check-In Rápido</h1>
+
                     <p>Ingresa el código del cliente para verificar su membresía</p>
                 </div>
+
+                <button
+                    onClick={toggleFullScreen}
+                    className="fullscreen-toggle-btn"
+                    title={isFullScreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                >
+                    {isFullScreen ? <Minimize2 size={24} /> : <Maximize2 size={24} />}
+                </button>
 
                 <Card className="checkin-search-card animate-fadeIn" style={{ animationDelay: '150ms' }}>
                     <form onSubmit={handleSearch} className="checkin-search-form">
@@ -149,92 +179,52 @@ const CheckIn = () => {
                             disabled={loading || checkingIn}
                             autoFocus
                         />
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            size="lg"
-                            loading={loading}
-                            disabled={!userId.trim()}
-                            fullWidth
-                        >
-                            Buscar Usuario
-                        </Button>
+                        <div className="checkin-actions">
+                            <Button
+                                type="submit"
+                                variant="success"
+                                size="xl"
+                                loading={loading}
+                                fullWidth
+                            >
+                                Ingresar
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="primary"
+                                size="md"
+                                fullWidth
+                                onClick={() => setIsRegisterModalOpen(true)}
+                                icon={<UserPlus size={18} />}
+                                className="btn-register-custom"
+                            >
+                                Regístrate Ahora
+                            </Button>
+                        </div>
                     </form>
                 </Card>
 
-                {userData && (
-                    <div className="checkin-result animate-scaleIn">
-                        <Card className="user-info-card">
-                            <div className="user-header">
-                                <div className="user-avatar-large">
-                                    {userData.nombre.charAt(0)}{userData.apellido.charAt(0)}
-                                </div>
-                                <div className="user-info">
-                                    <h2>{userData.nombre} {userData.apellido}</h2>
-                                    <p className="text-secondary">{userData.email}</p>
-                                    {userData.telefono && (
-                                        <p className="text-tertiary">{userData.telefono}</p>
-                                    )}
-                                </div>
-                            </div>
 
-                            {membershipData ? (
-                                <div className={`membership-status status-${membershipStatus.status}`}>
-                                    <div className="status-header">
-                                        <membershipStatus.icon size={32} />
-                                        <div>
-                                            <h3>{membershipStatus.label}</h3>
-                                            <p>{membershipData.tipoMembresiaNombre || 'Membresía'}</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="membership-dates">
-                                        <div className="date-info">
-                                            <Calendar size={18} />
-                                            <div>
-                                                <p className="date-label">Inicio</p>
-                                                <p className="date-value">
-                                                    {format(new Date(membershipData.fechaInicio), "d 'de' MMMM, yyyy", { locale: es })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="date-info">
-                                            <Calendar size={18} />
-                                            <div>
-                                                <p className="date-label">Vencimiento</p>
-                                                <p className="date-value">
-                                                    {format(new Date(membershipData.fechaFin), "d 'de' MMMM, yyyy", { locale: es })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                <CheckInStatusModal
+                    isOpen={isStatusModalOpen}
+                    onClose={() => setIsStatusModalOpen(false)}
+                    userData={userData}
+                    membershipData={membershipData}
+                    onConfirm={handleManualCheckIn}
+                    isAutoChecking={checkingIn}
+                    autoCheckInSuccess={autoCheckInSuccess}
+                />
 
-                                    <div className="days-remaining">
-                                        {differenceInDays(new Date(membershipData.fechaFin), new Date())} días restantes
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="no-membership">
-                                    <XCircle size={48} />
-                                    <h3>Sin Membresía Activa</h3>
-                                    <p>Este usuario no tiene una membresía activa</p>
-                                </div>
-                            )}
-
-                            <Button
-                                onClick={handleCheckIn}
-                                variant={membershipStatus?.status === 'active' ? 'success' : 'warning'}
-                                size="xl"
-                                fullWidth
-                                loading={checkingIn}
-                            >
-                                {membershipStatus?.status === 'active'
-                                    ? 'Confirmar Check-In'
-                                    : 'Permitir Acceso Manual'}
-                            </Button>
-                        </Card>
-                    </div>
-                )}
+                <UserFormModal
+                    isOpen={isRegisterModalOpen}
+                    onClose={() => setIsRegisterModalOpen(false)}
+                    isEditing={false}
+                    forcedRole="CLIENTE"
+                    onSuccess={() => {
+                        toast.success('Usuario registrado exitosamente');
+                    }}
+                />
             </div>
         </div>
     );

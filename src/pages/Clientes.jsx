@@ -4,9 +4,9 @@ import UserFormModal from '../components/UserFormModal';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/apiClient';
 import toast, { Toaster } from 'react-hot-toast';
-import './Usuarios.css';
+import './Usuarios.css'; // Reusing existing styles
 
-const Usuarios = () => {
+const Clientes = () => {
     const { user } = useAuth();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,12 +24,10 @@ const Usuarios = () => {
         telefono: '',
         cedula: '',
         cedulaTipo: 'CEDULA',
-        roles: ['COACH'],
+        roles: ['CLIENTE'],
         idGimnasio: null,
         idSucursalPorDefecto: null
     });
-
-    // Roles logic removed as it's now handled in UserFormModal
 
     useEffect(() => {
         loadUsuarios();
@@ -39,6 +37,8 @@ const Usuarios = () => {
         setLoading(true);
         try {
             let response;
+            // Fetch logic can be similar, but we'll filter on frontend for now
+            // Ideally backend would have a /clientes endpoint, but reusing /usuarios and filtering is safer without backend changes
             if (user?.roles?.includes('DEV')) {
                 response = await apiClient.get('/api/usuarios');
             } else if (user?.roles?.includes('ADMIN') || user?.roles?.includes('COACH')) {
@@ -55,12 +55,14 @@ const Usuarios = () => {
                 setLoading(false);
                 return;
             }
-            // Filter OUT 'CLIENTE' role
-            const staffUsers = response.data.filter(u => !u.roles?.includes('CLIENTE'));
-            setUsuarios(staffUsers);
+
+            // Filter strictly for CLIENTE role
+            const clientes = response.data.filter(u => u.roles?.includes('CLIENTE'));
+            setUsuarios(clientes);
+
         } catch (error) {
-            console.error('Error loading usuarios:', error);
-            toast.error('Error al cargar usuarios');
+            console.error('Error loading clientes:', error);
+            toast.error('Error al cargar clientes');
         } finally {
             setLoading(false);
         }
@@ -88,7 +90,7 @@ const Usuarios = () => {
                 telefono: usuario.telefono || '',
                 cedula: usuario.cedula || '',
                 cedulaTipo: usuario.cedulaTipo || 'CEDULA',
-                roles: usuario.roles || ['COACH'],
+                roles: usuario.roles || ['CLIENTE'],
                 idGimnasio: usuario.idGimnasio || user?.idGimnasio,
                 idSucursalPorDefecto: usuario.idSucursalPorDefecto || user?.idSucursalPorDefecto
             });
@@ -103,7 +105,7 @@ const Usuarios = () => {
                 telefono: '',
                 cedula: '',
                 cedulaTipo: 'CEDULA',
-                roles: ['COACH'],
+                roles: ['CLIENTE'],
                 idGimnasio: user?.idGimnasio,
                 idSucursalPorDefecto: user?.idSucursalPorDefecto
             });
@@ -121,11 +123,7 @@ const Usuarios = () => {
     };
 
     const getRoleBadgeClass = (role) => {
-        switch (role?.toUpperCase()) {
-            case 'DEV': return 'dev';
-            case 'ADMIN': return 'admin';
-            default: return 'cliente';
-        }
+        return 'cliente';
     };
 
     return (
@@ -137,13 +135,13 @@ const Usuarios = () => {
                 <div className="usuarios-header-title">
                     <Users size={28} color="var(--color-accent-primary)" />
                     <div>
-                        <h1>Gestión de Usuarios</h1>
-                        <p>Total: {filteredUsuarios.length} usuarios</p>
+                        <h1>Gestión de Clientes</h1>
+                        <p>Total: {filteredUsuarios.length} clientes</p>
                     </div>
                 </div>
                 <button className="usuarios-btn-new" onClick={() => handleOpenModal()}>
                     <UserPlus size={18} />
-                    Nuevo Usuario
+                    Nuevo Cliente
                 </button>
             </div>
 
@@ -169,7 +167,7 @@ const Usuarios = () => {
                         <table className="usuarios-table">
                             <thead>
                                 <tr>
-                                    <th>Usuario</th>
+                                    <th>Cliente</th>
                                     <th>Username</th>
                                     <th>Cédula</th>
                                     <th>Rol</th>
@@ -219,7 +217,7 @@ const Usuarios = () => {
                     ) : (
                         <div className="usuarios-empty">
                             <Users size={48} />
-                            <p>No se encontraron usuarios</p>
+                            <p>No se encontraron clientes</p>
                         </div>
                     )}
                 </div>
@@ -232,10 +230,10 @@ const Usuarios = () => {
                 initialData={currentUsuario}
                 isEditing={isEditing}
                 onSuccess={handleSuccess}
-                allowedRoles={['ADMIN', 'COACH', 'DEV']}
+                forcedRole="CLIENTE"
             />
         </div>
     );
 };
 
-export default Usuarios;
+export default Clientes;

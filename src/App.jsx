@@ -9,6 +9,7 @@ import CheckIn from './pages/CheckIn';
 import Membresias from './pages/Membresias';
 import Ventas from './pages/Ventas';
 import Usuarios from './pages/Usuarios';
+import Clientes from './pages/Clientes';
 import Gimnasios from './pages/Gimnasios';
 import Sucursales from './pages/Sucursales';
 import Productos from './pages/Productos';
@@ -110,6 +111,16 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Usuarios />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clientes"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Clientes />
               </DashboardLayout>
             </ProtectedRoute>
           }

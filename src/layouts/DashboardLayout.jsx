@@ -46,7 +46,9 @@ const DashboardLayout = ({ children }) => {
         { path: '/membresias', icon: CreditCard, label: 'Membresías', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/tipos-membresia', icon: Users, label: 'Tipos Membresia', roles: ['DEV', 'ADMIN'] },
         { path: '/ventas', icon: ShoppingCart, label: 'Ventas', roles: ['DEV', 'ADMIN', 'COACH'] },
-        { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN', 'COACH'] },
+
+        { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN'] },
+        { path: '/clientes', icon: Users, label: 'Clientes', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['DEV', 'ADMIN'] },
         { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
         { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV', 'ADMIN'] },

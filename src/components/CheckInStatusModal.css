@@ -1,0 +1,188 @@
+.checkin-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: var(--spacing-md);
+}
+
+.checkin-modal-content {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 500px;
+    padding: var(--spacing-xl);
+    position: relative;
+    box-shadow: var(--shadow-2xl);
+}
+
+.checkin-modal-close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: transparent;
+    border: none;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.checkin-modal-close:hover {
+    background: var(--color-bg-element);
+    color: var(--color-text-primary);
+}
+
+/* User Header */
+.checkin-user-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-lg);
+}
+
+.checkin-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.checkin-user-details h2 {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.checkin-user-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    color: var(--color-text-tertiary);
+    font-size: 0.9rem;
+}
+
+/* Status Card */
+.checkin-status-card {
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    border: 1px solid transparent;
+}
+
+.status-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--color-accent-success);
+}
+
+.status-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--color-accent-warning);
+}
+
+.status-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--color-accent-danger);
+}
+
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.status-success .status-icon {
+    color: var(--color-accent-success);
+}
+
+.status-warning .status-icon {
+    color: var(--color-accent-warning);
+}
+
+.status-error .status-icon {
+    color: var(--color-accent-danger);
+}
+
+.status-row h3 {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+}
+
+.checkin-dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.date-box {
+    background: var(--color-bg-primary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.date-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-text-tertiary);
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.date-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-transform: capitalize;
+}
+
+.days-remaining-badge {
+    background: rgba(255, 255, 255, 0.1);
+    text-align: center;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    color: var(--color-accent-primary);
+}
+
+.no-membership-msg {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: var(--spacing-md);
+}
+
+/* Footer / Auto Success */
+.auto-success-msg {
+    background: var(--color-accent-success);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    font-weight: 600;
+    font-size: 1.2rem;
+    animation: fadeIn 0.3s ease-out;
+}
