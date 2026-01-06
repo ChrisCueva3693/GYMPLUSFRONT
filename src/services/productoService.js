@@ -1,38 +1,24 @@
-import axios from 'axios';
+import apiClient from './apiClient';
 
-const API_URL = 'http://localhost:8080/api/productos';
-
-// Configurar interceptor para incluir el token en las peticiones
-axios.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+const API_ENDPOINT = '/api/productos';
 
 const getAll = async () => {
-    const response = await axios.get(API_URL);
+    const response = await apiClient.get(API_ENDPOINT);
     return response.data;
 };
 
 const create = async (producto) => {
-    const response = await axios.post(API_URL, producto);
+    const response = await apiClient.post(API_ENDPOINT, producto);
     return response.data;
 };
 
 const update = async (id, producto) => {
-    const response = await axios.put(`${API_URL}/${id}`, producto);
+    const response = await apiClient.put(`${API_ENDPOINT}/${id}`, producto);
     return response.data;
 };
 
 const remove = async (id) => {
-    await axios.delete(`${API_URL}/${id}`);
+    await apiClient.delete(`${API_ENDPOINT}/${id}`);
 };
 
 export default {

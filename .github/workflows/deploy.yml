@@ -54,6 +54,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_REGISTRY }}/${{ steps.vars.outputs.repo_lc }}:${{ env.IMAGE_TAG }}
             ${{ env.IMAGE_REGISTRY }}/${{ steps.vars.outputs.repo_lc }}:latest
+          build-args: |
+            VITE_API_BASE_URL=/
 
   deploy:
     name: Deploy to Hostinger
