@@ -4,10 +4,12 @@ import UserFormModal from '../components/UserFormModal';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/apiClient';
 import toast, { Toaster } from 'react-hot-toast';
+import { useIsMobile } from '../hooks/useIsMobile';
 import './Usuarios.css'; // Reusing existing styles
 
 const Clientes = () => {
     const { user } = useAuth();
+    const isMobile = useIsMobile();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -165,91 +167,92 @@ const Clientes = () => {
                 <div className="usuarios-table-container">
                     {filteredUsuarios.length > 0 ? (
                         <>
-                            <table className="usuarios-table desktop-only">
-                                <thead>
-                                    <tr>
-                                        <th>Cliente</th>
-                                        <th>Username</th>
-                                        <th>Cédula</th>
-                                        <th>Rol</th>
-                                        <th style={{ textAlign: 'right' }}>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                            {!isMobile ? (
+                                <table className="usuarios-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Username</th>
+                                            <th>Cédula</th>
+                                            <th>Rol</th>
+                                            <th style={{ textAlign: 'right' }}>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredUsuarios.map((usuario) => (
+                                            <tr key={usuario.id}>
+                                                <td>
+                                                    <div className="usuario-name-cell">
+                                                        <div className="usuario-avatar">
+                                                            {usuario.nombre?.charAt(0)}{usuario.apellido?.charAt(0)}
+                                                        </div>
+                                                        <div className="usuario-info">
+                                                            <span className="name">{usuario.nombre} {usuario.apellido}</span>
+                                                            <span className="email">{usuario.email}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span style={{ color: 'var(--color-text-tertiary)' }}>@{usuario.username}</span>
+                                                </td>
+                                                <td>
+                                                    {usuario.cedula || <span style={{ color: 'var(--color-text-muted)' }}>—</span>}
+                                                </td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                        {usuario.roles?.map(role => (
+                                                            <span key={role} className={`role-badge ${getRoleBadgeClass(role)}`}>
+                                                                {role}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="usuario-actions">
+                                                        <button className="btn-edit" onClick={() => handleOpenModal(usuario)} title="Editar">
+                                                            <Edit size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div className="usuarios-mobile-list">
                                     {filteredUsuarios.map((usuario) => (
-                                        <tr key={usuario.id}>
-                                            <td>
-                                                <div className="usuario-name-cell">
-                                                    <div className="usuario-avatar">
-                                                        {usuario.nombre?.charAt(0)}{usuario.apellido?.charAt(0)}
-                                                    </div>
-                                                    <div className="usuario-info">
-                                                        <span className="name">{usuario.nombre} {usuario.apellido}</span>
-                                                        <span className="email">{usuario.email}</span>
-                                                    </div>
+                                        <div className="usuario-card" key={usuario.id}>
+                                            <div className="usuario-card-header">
+                                                <div className="usuario-avatar">
+                                                    {usuario.nombre?.charAt(0)}{usuario.apellido?.charAt(0)}
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span style={{ color: 'var(--color-text-tertiary)' }}>@{usuario.username}</span>
-                                            </td>
-                                            <td>
-                                                {usuario.cedula || <span style={{ color: 'var(--color-text-muted)' }}>—</span>}
-                                            </td>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                <div className="usuario-card-info">
+                                                    <h3>{usuario.nombre} {usuario.apellido}</h3>
+                                                    <span className="email">{usuario.email}</span>
+                                                </div>
+                                                <button className="btn-edit-mobile" onClick={() => handleOpenModal(usuario)}>
+                                                    <Edit size={16} />
+                                                </button>
+                                            </div>
+                                            <div className="usuario-card-details">
+                                                <div className="detail-item">
+                                                    <span>Username:</span> @{usuario.username}
+                                                </div>
+                                                <div className="detail-item">
+                                                    <span>Cédula:</span> {usuario.cedula || '—'}
+                                                </div>
+                                                <div className="roles-container">
                                                     {usuario.roles?.map(role => (
                                                         <span key={role} className={`role-badge ${getRoleBadgeClass(role)}`}>
                                                             {role}
                                                         </span>
                                                     ))}
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <div className="usuario-actions">
-                                                    <button className="btn-edit" onClick={() => handleOpenModal(usuario)} title="Editar">
-                                                        <Edit size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                            </div>
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
-
-                            {/* Mobile Card Layout */}
-                            <div className="usuarios-mobile-list mobile-only">
-                                {filteredUsuarios.map((usuario) => (
-                                    <div className="usuario-card" key={usuario.id}>
-                                        <div className="usuario-card-header">
-                                            <div className="usuario-avatar">
-                                                {usuario.nombre?.charAt(0)}{usuario.apellido?.charAt(0)}
-                                            </div>
-                                            <div className="usuario-card-info">
-                                                <h3>{usuario.nombre} {usuario.apellido}</h3>
-                                                <span className="email">{usuario.email}</span>
-                                            </div>
-                                            <button className="btn-edit-mobile" onClick={() => handleOpenModal(usuario)}>
-                                                <Edit size={16} />
-                                            </button>
-                                        </div>
-                                        <div className="usuario-card-details">
-                                            <div className="detail-item">
-                                                <span>Username:</span> @{usuario.username}
-                                            </div>
-                                            <div className="detail-item">
-                                                <span>Cédula:</span> {usuario.cedula || '—'}
-                                            </div>
-                                            <div className="roles-container">
-                                                {usuario.roles?.map(role => (
-                                                    <span key={role} className={`role-badge ${getRoleBadgeClass(role)}`}>
-                                                        {role}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <div className="usuarios-empty">
@@ -259,7 +262,6 @@ const Clientes = () => {
                     )}
                 </div>
             )}
-
             {/* Modal */}
             <UserFormModal
                 isOpen={isModalOpen}
@@ -272,5 +274,7 @@ const Clientes = () => {
         </div>
     );
 };
+
+{/* Modal */ }
 
 export default Clientes;

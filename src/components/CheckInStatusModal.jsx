@@ -126,17 +126,17 @@ const CheckInStatusModal = ({
                             <span>¡Check-In Realizado Exitosamente!</span>
                         </div>
                     ) : (
-                        <Button
-                            onClick={onConfirm}
-                            variant={status.status === 'active' ? 'success' : 'warning'}
-                            size="lg"
-                            fullWidth
-                            loading={isAutoChecking}
-                        >
-                            {status.status === 'active'
-                                ? 'Confirmando Check-In...'
-                                : 'Permitir Acceso Manual'}
-                        </Button>
+                        status.status === 'active' && (
+                            <Button
+                                onClick={onConfirm}
+                                variant="success"
+                                size="lg"
+                                fullWidth
+                                loading={isAutoChecking}
+                            >
+                                Confirmando Check-In...
+                            </Button>
+                        )
                     )}
                 </div>
             </div>

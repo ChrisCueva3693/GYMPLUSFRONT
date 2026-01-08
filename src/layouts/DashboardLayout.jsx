@@ -41,18 +41,21 @@ const DashboardLayout = ({ children }) => {
 
     const menuItems = [
         { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['DEV', 'ADMIN'] },
-        { path: '/inicio', icon: UserCheck, label: 'Inicio', roles: ['CLIENTE'] },
-        { path: '/checkin', icon: UserCheck, label: 'Entradas', roles: ['DEV', 'ADMIN', 'COACH'] },
+        { path: '/inicio', icon: UserCheck, label: 'Inicio', roles: ['CLIENTE'] }, // Keeping for CLIENTE specificity
+
+        { path: '/checkin', icon: UserCheck, label: 'Asistencia', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/membresias', icon: CreditCard, label: 'Membresías', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/tipos-membresia', icon: Users, label: 'Tipos Membresia', roles: ['DEV', 'ADMIN'] },
         { path: '/ventas', icon: ShoppingCart, label: 'Ventas', roles: ['DEV', 'ADMIN', 'COACH'] },
 
         { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN'] },
         { path: '/clientes', icon: Users, label: 'Clientes', roles: ['DEV', 'ADMIN', 'COACH'] },
-        { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['DEV', 'ADMIN'] },
-        { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
-        { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV', 'ADMIN'] },
+
         { path: '/productos', icon: Package, label: 'Productos', roles: ['DEV', 'ADMIN'] },
+        { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV', 'ADMIN'] },
+        { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['DEV', 'ADMIN'] },
+
+        { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
     ];
 
     const isActive = (path) => {

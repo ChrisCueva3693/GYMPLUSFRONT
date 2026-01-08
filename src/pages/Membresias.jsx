@@ -5,6 +5,7 @@ import membresiaService from '../services/membresiaService';
 import toast, { Toaster } from 'react-hot-toast';
 import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useAuth } from '../hooks/useAuth'; // Add import
 import './Membresias.css';
 
 const Membresias = () => {
@@ -12,6 +13,7 @@ const Membresias = () => {
     const [loading, setLoading] = useState(true);
 
     // Modal State
+    const { user } = useAuth(); // Import useAuth
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [tiposMembresia, setTiposMembresia] = useState([]);
@@ -55,7 +57,21 @@ const Membresias = () => {
                 apiClient.get('/api/tipos-pago')
             ]);
 
-            setClientes(clientesRes.data);
+            // Filter clients if user is not DEV
+            let filteredClientes = clientesRes.data;
+            if (user && !user.roles.includes('DEV')) {
+                // Filter by Gym first (Privacy between companies)
+                if (user.idGimnasio) {
+                    filteredClientes = filteredClientes.filter(c => c.idGimnasio === user.idGimnasio);
+                }
+
+                // If user has a specific branch assigned, filter by that branch too
+                if (user.idSucursalPorDefecto) {
+                    filteredClientes = filteredClientes.filter(c => c.idSucursalPorDefecto === user.idSucursalPorDefecto);
+                }
+            }
+
+            setClientes(filteredClientes);
             setTiposMembresia(tiposMembresiaRes.data);
             setTiposPago(tiposPagoRes.data);
 

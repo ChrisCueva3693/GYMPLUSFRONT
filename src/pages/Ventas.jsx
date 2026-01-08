@@ -5,6 +5,7 @@ import apiClient from '../services/apiClient';
 import ventaService from '../services/ventaService';
 import productoService from '../services/productoService';
 import toast, { Toaster } from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth'; // Add import
 import './Ventas.css';
 
 const Ventas = () => {
@@ -12,6 +13,7 @@ const Ventas = () => {
     const [loading, setLoading] = useState(true);
 
     // Modal State
+    const { user } = useAuth(); // Import useAuth
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [productos, setProductos] = useState([]);
@@ -57,7 +59,22 @@ const Ventas = () => {
                 apiClient.get('/api/tipos-pago')
             ]);
 
-            setClientes(clientesRes.data);
+            // Filter clients if user is not DEV
+            let filteredClientes = clientesRes.data;
+            if (user && !user.roles.includes('DEV')) {
+                // Filter by Gym first (Privacy between companies)
+                if (user.idGimnasio) {
+                    filteredClientes = filteredClientes.filter(c => c.idGimnasio === user.idGimnasio);
+                }
+
+                // If user has a specific branch assigned, filter by that branch too
+                // (Requirement: "deberia solo aparecer los de la sucursal")
+                if (user.idSucursalPorDefecto) {
+                    filteredClientes = filteredClientes.filter(c => c.idSucursalPorDefecto === user.idSucursalPorDefecto);
+                }
+            }
+
+            setClientes(filteredClientes);
             setProductos(productosRes);
             setTiposPago(tiposPagoRes.data);
 

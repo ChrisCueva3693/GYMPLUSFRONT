@@ -15,14 +15,24 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
         telefono: '',
         cedula: '',
         cedulaTipo: 'CEDULA',
-        roles: ['CLIENTE'],
+        roles: [], // Empty by default
         idGimnasio: null,
         idSucursalPorDefecto: null
     });
 
     // Roles logic
-    let availableRoles = ['CLIENTE'];
-    if (!forcedRole) {
+    let availableRoles = [];
+
+    // 1. Forced Role (Direct restriction, e.g. for Clientes page)
+    if (forcedRole) {
+        availableRoles = [forcedRole];
+    }
+    // 2. Allowed Roles (Explicit list, e.g. for Usuarios page)
+    else if (allowedRoles) {
+        availableRoles = allowedRoles;
+    }
+    // 3. Fallback based on current user (if no props provided)
+    else {
         if (user?.roles?.includes('DEV')) {
             availableRoles = ['DEV', 'ADMIN', 'COACH', 'CLIENTE'];
         } else if (user?.roles?.includes('ADMIN')) {
@@ -30,11 +40,6 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
         } else if (user?.roles?.includes('COACH')) {
             availableRoles = ['CLIENTE'];
         }
-    } else if (allowedRoles) {
-        // If allowedRoles is explicitly provided, use it
-        availableRoles = allowedRoles;
-    } else {
-        availableRoles = [forcedRole];
     }
 
     useEffect(() => {
@@ -50,7 +55,7 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                     telefono: initialData.telefono || '',
                     cedula: initialData.cedula || '',
                     cedulaTipo: initialData.cedulaTipo || 'CEDULA',
-                    roles: initialData.roles || ['CLIENTE'],
+                    roles: initialData.roles || (forcedRole ? [forcedRole] : []), // Use existing or forced, otherwise empty
                     idGimnasio: initialData.idGimnasio || user?.idGimnasio,
                     idSucursalPorDefecto: initialData.idSucursalPorDefecto || user?.idSucursalPorDefecto
                 });
@@ -64,7 +69,7 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                     telefono: '',
                     cedula: '',
                     cedulaTipo: 'CEDULA',
-                    roles: forcedRole ? [forcedRole] : ['CLIENTE'],
+                    roles: forcedRole ? [forcedRole] : [], // Empty if not forced
                     idGimnasio: user?.idGimnasio,
                     idSucursalPorDefecto: user?.idSucursalPorDefecto
                 });
@@ -74,6 +79,12 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!formData.roles || formData.roles.length === 0) {
+            toast.error('Debe seleccionar un rol');
+            return;
+        }
+
         try {
             const payload = {
                 ...formData,
@@ -205,10 +216,12 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                         <div className="usuarios-form-group">
                             <label>Rol *</label>
                             <select
-                                value={formData.roles?.[0] || 'CLIENTE'}
+                                value={formData.roles?.[0] || ''}
                                 onChange={(e) => setFormData({ ...formData, roles: [e.target.value] })}
                                 disabled={!!forcedRole}
+                                required
                             >
+                                <option value="" disabled>Seleccionar rol...</option>
                                 {availableRoles.map(role => (
                                     <option key={role} value={role}>{role}</option>
                                 ))}

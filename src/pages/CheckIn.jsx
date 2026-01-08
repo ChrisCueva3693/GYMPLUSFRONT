@@ -79,7 +79,7 @@ const CheckIn = () => {
             // Auto-close and reset
             setTimeout(() => {
                 resetForm();
-            }, 2500);
+            }, 4000);
         } catch (error) {
             toast.error(error.message || 'Error al registrar check-in');
             // If auto-checkin fails, keep modal open but maybe show error? 
@@ -116,18 +116,25 @@ const CheckIn = () => {
             setIsStatusModalOpen(true);
             setAutoCheckInSuccess(false); // reset status
 
-            // 3. Auto Check-In if active
+            // 3. Auto Check-In Logic
             if (result.membership && result.hasActiveMembership) {
                 // Short delay to let the modal animation start and user see their data
                 setTimeout(() => {
                     performCheckIn(result.user, selectedBranchId);
                 }, 500);
             } else {
-                // No membership or expired - Warning toast already handled globally or in UI
-                if (!result.membership) {
-                    toast('Usuario sin membresía activa', {
-                        icon: '⚠️',
-                        style: { borderRadius: '10px', background: '#333', color: '#fff' },
+                // MEMBERSHIP ISSUES (Expired or None)
+                if (result.user) {
+                    // Distinct Red Alert for Expired/Invalid Membership
+                    toast.error('MEMBRESÍA CADUCADA o INACTIVA. Por favor renuevela.', {
+                        duration: 5000,
+                        style: {
+                            background: '#ef4444', // Red-500
+                            color: '#ffffff',
+                            fontWeight: 'bold',
+                            border: '2px solid #b91c1c'
+                        },
+                        icon: <AlertTriangle size={24} color="#fff" />
                     });
                 }
             }

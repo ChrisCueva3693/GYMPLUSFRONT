@@ -5,8 +5,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import './Reportes.css';
 import { useBranch } from '../context/BranchContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const Reportes = () => {
+    const isMobile = useIsMobile();
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState(null);
     const [selectedPago, setSelectedPago] = useState(null); // For detail modal
@@ -196,85 +198,86 @@ const Reportes = () => {
                     <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Cargando datos...</div>
                 ) : (
                     <>
-                        <table className="reporte-table desktop-only">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Concepto</th>
-                                    <th>Tipo Pago</th>
-                                    <th>Referencia</th>
-                                    <th>Monto</th>
-                                    <th style={{ width: '60px' }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        {!isMobile ? (
+                            <table className="reporte-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Concepto</th>
+                                        <th>Tipo Pago</th>
+                                        <th>Referencia</th>
+                                        <th>Monto</th>
+                                        <th style={{ width: '60px' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stats?.detallePagos?.length > 0 ? (
+                                        stats.detallePagos.map((pago) => (
+                                            <tr key={pago.idPago}>
+                                                <td>{new Date(pago.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {new Date(pago.fecha).toLocaleDateString()}</td>
+                                                <td>{pago.concepto}</td>
+                                                <td>
+                                                    <span className={`badge-tipo ${pago.tipoPago.toLowerCase().includes('efectivo') || pago.tipoPago === 'E' ? 'efectivo' :
+                                                        pago.tipoPago.toLowerCase().includes('tarjeta') || pago.tipoPago === 'C' || pago.tipoPago === 'TC' ? 'tarjeta' : 'transfer'
+                                                        }`}>
+                                                        {pago.tipoPago}
+                                                    </span>
+                                                </td>
+                                                <td>{pago.referencia || '-'}</td>
+                                                <td>{formatMoney(pago.monto)}</td>
+                                                <td>
+                                                    <button
+                                                        className="icon-btn"
+                                                        onClick={() => setSelectedPago(pago)}
+                                                        title="Ver Detalle"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
+                                                No hay transacciones en este rango de fechas.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="reporte-mobile-list">
                                 {stats?.detallePagos?.length > 0 ? (
                                     stats.detallePagos.map((pago) => (
-                                        <tr key={pago.idPago}>
-                                            <td>{new Date(pago.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {new Date(pago.fecha).toLocaleDateString()}</td>
-                                            <td>{pago.concepto}</td>
-                                            <td>
+                                        <div className="reporte-card" key={pago.idPago} onClick={() => setSelectedPago(pago)}>
+                                            <div className="card-header">
+                                                <div className="date-info">
+                                                    <Calendar size={14} style={{ marginRight: '4px' }} />
+                                                    <span>{new Date(pago.fecha).toLocaleDateString()}</span>
+                                                    <span className="time-sub">{new Date(pago.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                <span className="amount-highlight">{formatMoney(pago.monto)}</span>
+                                            </div>
+                                            <div className="card-concept">
+                                                {pago.concepto}
+                                            </div>
+                                            <div className="card-footer-row">
                                                 <span className={`badge-tipo ${pago.tipoPago.toLowerCase().includes('efectivo') || pago.tipoPago === 'E' ? 'efectivo' :
                                                     pago.tipoPago.toLowerCase().includes('tarjeta') || pago.tipoPago === 'C' || pago.tipoPago === 'TC' ? 'tarjeta' : 'transfer'
                                                     }`}>
                                                     {pago.tipoPago}
                                                 </span>
-                                            </td>
-                                            <td>{pago.referencia || '-'}</td>
-                                            <td>{formatMoney(pago.monto)}</td>
-                                            <td>
-                                                <button
-                                                    className="icon-btn"
-                                                    onClick={() => setSelectedPago(pago)}
-                                                    title="Ver Detalle"
-                                                >
-                                                    <Eye size={18} />
-                                                </button>
-                                            </td>
-                                        </tr>
+                                                <span className="reference-text">Ref: {pago.referencia || '-'}</span>
+                                            </div>
+                                        </div>
                                     ))
                                 ) : (
-                                    <tr>
-                                        <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
-                                            No hay transacciones en este rango de fechas.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-
-                        {/* Mobile Card View */}
-                        <div className="reporte-mobile-list mobile-only">
-                            {stats?.detallePagos?.length > 0 ? (
-                                stats.detallePagos.map((pago) => (
-                                    <div className="reporte-card" key={pago.idPago} onClick={() => setSelectedPago(pago)}>
-                                        <div className="card-header">
-                                            <div className="date-info">
-                                                <Calendar size={14} style={{ marginRight: '4px' }} />
-                                                <span>{new Date(pago.fecha).toLocaleDateString()}</span>
-                                                <span className="time-sub">{new Date(pago.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                            </div>
-                                            <span className="amount-highlight">{formatMoney(pago.monto)}</span>
-                                        </div>
-                                        <div className="card-concept">
-                                            {pago.concepto}
-                                        </div>
-                                        <div className="card-footer-row">
-                                            <span className={`badge-tipo ${pago.tipoPago.toLowerCase().includes('efectivo') || pago.tipoPago === 'E' ? 'efectivo' :
-                                                pago.tipoPago.toLowerCase().includes('tarjeta') || pago.tipoPago === 'C' || pago.tipoPago === 'TC' ? 'tarjeta' : 'transfer'
-                                                }`}>
-                                                {pago.tipoPago}
-                                            </span>
-                                            <span className="reference-text">Ref: {pago.referencia || '-'}</span>
-                                        </div>
+                                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-secondary)' }}>
+                                        No hay transacciones
                                     </div>
-                                ))
-                            ) : (
-                                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-secondary)' }}>
-                                    No hay transacciones
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        )}
                     </>
                 )}
             </div>
