@@ -158,20 +158,41 @@ const CheckIn = () => {
     return (
         <div className={`checkin-page ${isFullScreen ? 'fullscreen-mode' : ''}`}>
             <Toaster position="top-right" />
+
+            {/* Animated background layers */}
+            <div className="checkin-bg" />
+            <div className="checkin-orb" />
+            <div className="checkin-orb" />
+            <div className="checkin-orb" />
+            <div className="checkin-particles">
+                <div className="particle" />
+                <div className="particle" />
+                <div className="particle" />
+                <div className="particle" />
+                <div className="particle" />
+                <div className="particle" />
+            </div>
+            <div className="checkin-grid-overlay" />
+
+            {/* Fullscreen toggle */}
+            <button
+                onClick={toggleFullScreen}
+                className="fullscreen-toggle-btn"
+                title={isFullScreen ? "Salir de pantalla completa" : "Pantalla completa"}
+            >
+                {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            </button>
+
+            {/* Main content */}
             <div className="checkin-container">
                 <div className="checkin-header animate-fadeIn">
+                    <div className="checkin-brand">
+                        <div className="checkin-brand-icon">GP</div>
+                        <span className="checkin-brand-name">GYM PLUS</span>
+                    </div>
                     <User size={48} />
-
                     <p>Ingresa el código del cliente para verificar su membresía</p>
                 </div>
-
-                <button
-                    onClick={toggleFullScreen}
-                    className="fullscreen-toggle-btn"
-                    title={isFullScreen ? "Salir de pantalla completa" : "Pantalla completa"}
-                >
-                    {isFullScreen ? <Minimize2 size={24} /> : <Maximize2 size={24} />}
-                </button>
 
                 <Card className="checkin-search-card animate-fadeIn" style={{ animationDelay: '150ms' }}>
                     <form onSubmit={handleSearch} className="checkin-search-form">
@@ -210,8 +231,6 @@ const CheckIn = () => {
                         </div>
                     </form>
                 </Card>
-
-
 
                 <CheckInStatusModal
                     isOpen={isStatusModalOpen}

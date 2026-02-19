@@ -22,7 +22,7 @@
 
 .searchable-select-control.open {
     border-color: var(--color-accent-primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
 }
 
 .searchable-select-value {
@@ -120,7 +120,7 @@
 }
 
 .searchable-select-option.selected {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(124, 58, 237, 0.15);
     color: var(--color-accent-primary);
     font-weight: 500;
 }

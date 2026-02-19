@@ -1,7 +1,7 @@
 /* Membresias Page Styles */
 .membresias-page {
     padding: var(--spacing-xl);
-    padding-top: 6rem;
+    
     min-height: 100vh;
     background: var(--color-bg-primary);
 }
@@ -100,7 +100,7 @@
 }
 
 .membresias-table tr:hover {
-    background: rgba(59, 130, 246, 0.05);
+    background: rgba(124, 58, 237, 0.05);
 }
 
 /* Response Utilities */

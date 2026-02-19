@@ -93,7 +93,7 @@ const Dashboard = () => {
             value: stats.checkInsToday,
             icon: UserCheck,
             gradient: 'var(--gradient-blue)',
-            color: '#3b82f6',
+            color: '#7c3aed',
         },
         {
             title: 'Membresías Activas',

@@ -1,7 +1,6 @@
 .reportes-page {
     padding: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
 }
 
 .reportes-header {
@@ -125,8 +124,8 @@
 }
 
 .stat-icon.total {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
 }
 
 .stat-icon.efectivo {
@@ -304,8 +303,8 @@
 }
 
 .icon-btn:hover {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
 }
 
 to {

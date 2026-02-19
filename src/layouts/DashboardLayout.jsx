@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -13,63 +13,117 @@ import {
     LogOut,
     Menu,
     X,
-    Package
+    Package,
+    Sun,
+    Moon,
+    ChevronDown
 } from 'lucide-react';
 import './DashboardLayout.css';
 import BranchSelector from '../components/BranchSelector';
 
 const DashboardLayout = ({ children }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-    const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+    const [darkMode, setDarkMode] = useState(() => {
+        return localStorage.getItem('theme') !== 'light';
+    });
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const dropdownRef = useRef(null);
 
-    // Track screen resize
-    React.useEffect(() => {
+    // Handle responsive
+    useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth <= 768);
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (mobile) setSidebarOpen(false);
+            else setSidebarOpen(true);
         };
         window.addEventListener('resize', handleResize);
+        handleResize();
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Toggle theme on <html>
+    useEffect(() => {
+        const html = document.documentElement;
+        if (darkMode) {
+            html.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            html.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [darkMode]);
+
+    // Close sidebar on route change (mobile only)
+    useEffect(() => {
+        if (isMobile) setSidebarOpen(false);
+    }, [location.pathname, isMobile]);
+
+    // Close user dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setUserDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Close sidebar on Escape
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (e.key === 'Escape') {
+                setSidebarOpen(false);
+                setUserDropdownOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, []);
+
     const handleLogout = () => {
+        setUserDropdownOpen(false);
         logout();
         navigate('/login');
     };
 
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
     const menuItems = [
         { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['DEV', 'ADMIN'] },
-        { path: '/inicio', icon: UserCheck, label: 'Inicio', roles: ['CLIENTE'] }, // Keeping for CLIENTE specificity
-
+        { path: '/inicio', icon: UserCheck, label: 'Inicio', roles: ['CLIENTE'] },
         { path: '/checkin', icon: UserCheck, label: 'Asistencia', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/membresias', icon: CreditCard, label: 'Membresías', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/tipos-membresia', icon: Users, label: 'Tipos Membresia', roles: ['DEV', 'ADMIN'] },
         { path: '/ventas', icon: ShoppingCart, label: 'Ventas', roles: ['DEV', 'ADMIN', 'COACH'] },
-
         { path: '/usuarios', icon: Users, label: 'Usuarios', roles: ['DEV', 'ADMIN'] },
         { path: '/clientes', icon: Users, label: 'Clientes', roles: ['DEV', 'ADMIN', 'COACH'] },
-
         { path: '/productos', icon: Package, label: 'Productos', roles: ['DEV', 'ADMIN'] },
         { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV', 'ADMIN'] },
         { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['DEV', 'ADMIN'] },
-
         { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
     ];
 
-    const isActive = (path) => {
-        return location.pathname === path;
-    };
+    const isActive = (path) => location.pathname === path;
 
     return (
         <div className="dashboard-layout">
+            {/* Mobile backdrop */}
+            {isMobile && sidebarOpen && (
+                <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+            )}
+
             {/* Sidebar */}
-            <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+            <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'} ${isMobile ? 'mobile' : ''}`}>
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
                         <div className="logo-icon">GP</div>
-                        {sidebarOpen && <span className="logo-text">GymPlus</span>}
+                        <span className="logo-text">GYM PLUS</span>
                     </div>
                 </div>
 
@@ -82,72 +136,78 @@ const DashboardLayout = ({ children }) => {
                                 to={item.path}
                                 className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
                                 title={item.label}
-                                onClick={() => isMobile && setSidebarOpen(false)}
                             >
                                 <item.icon size={20} />
-                                {sidebarOpen && <span>{item.label}</span>}
+                                <span>{item.label}</span>
                             </Link>
                         ))}
                 </nav>
-
-                <div className="sidebar-footer">
-                    <div className={`user-info ${!sidebarOpen ? 'collapsed' : ''}`}>
-                        <div className="user-avatar">
-                            {user?.username?.charAt(0).toUpperCase() || 'U'}
-                        </div>
-                        {sidebarOpen && (
-                            <div className="user-details">
-                                <p className="user-name">{user?.nombreCompleto || user?.username}</p>
-                                <p className="user-role">{user?.roles?.[0] || 'Usuario'}</p>
-                            </div>
-                        )}
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="logout-btn"
-                        title="Cerrar sesión"
-                    >
-                        <LogOut size={20} />
-                        {sidebarOpen && <span>Cerrar Sesión</span>}
-                    </button>
-                </div>
             </aside>
 
-            {/* Mobile Overlay Backdrop */}
-            {isMobile && sidebarOpen && (
-                <div
-                    className="mobile-overlay"
-                    onClick={() => setSidebarOpen(false)}
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        backdropFilter: 'blur(3px)',
-                        zIndex: 90
-                    }}
-                />
-            )}
-
             {/* Main Content */}
-            <div className="main-content">
+            <div className={`main-content ${sidebarOpen && !isMobile ? 'with-sidebar' : ''}`}>
                 <header className="top-header">
-                    <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="toggle-sidebar-btn"
-                    >
-                        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
-
-                    <div className="header-title">
-                        <h2>{menuItems.find(item => isActive(item.path))?.label || 'GymPlus'}</h2>
+                    <div className="header-left">
+                        <button
+                            onClick={toggleSidebar}
+                            className="toggle-sidebar-btn"
+                            aria-label="Toggle sidebar"
+                        >
+                            {sidebarOpen && !isMobile ? <X size={20} /> : <Menu size={20} />}
+                        </button>
                     </div>
 
-                    <div className="header-actions">
+                    <div className="header-right">
                         <BranchSelector />
-                        {/* Placeholder for additional actions */}
+
+                        <button
+                            className="theme-toggle-btn"
+                            onClick={() => setDarkMode(prev => !prev)}
+                            title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+                        >
+                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
+
+                        <div className="user-menu" ref={dropdownRef}>
+                            <button
+                                className="user-menu-trigger"
+                                onClick={() => setUserDropdownOpen(prev => !prev)}
+                            >
+                                <div className="user-avatar">
+                                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                                </div>
+                                <div className="user-menu-info">
+                                    <span className="user-menu-name">
+                                        {user?.nombreCompleto || user?.username}
+                                    </span>
+                                    <span className="user-menu-role">
+                                        {user?.roles?.[0] || 'Usuario'}
+                                    </span>
+                                </div>
+                                <ChevronDown size={16} className={`dropdown-arrow ${userDropdownOpen ? 'open' : ''}`} />
+                            </button>
+
+                            {userDropdownOpen && (
+                                <div className="user-dropdown">
+                                    <div className="user-dropdown-header">
+                                        <p className="dropdown-fullname">
+                                            {user?.nombreCompleto || user?.username}
+                                        </p>
+                                        <p className="dropdown-email">
+                                            {user?.email || user?.username}
+                                        </p>
+                                        <span className="dropdown-role-badge">
+                                            {user?.roles?.[0] || 'Usuario'}
+                                        </span>
+                                    </div>
+                                    <div className="user-dropdown-divider" />
+                                    <button className="user-dropdown-item logout" onClick={handleLogout}>
+                                        <LogOut size={16} />
+                                        Cerrar Sesión
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 

@@ -1,7 +1,7 @@
 /* Usuarios Page Styles */
 .usuarios-page {
     padding: var(--spacing-xl);
-    padding-top: 6rem;
+    
     min-height: 100vh;
     background: var(--color-bg-primary);
 }
@@ -129,7 +129,7 @@
 }
 
 .usuarios-table tr:hover {
-    background: rgba(59, 130, 246, 0.05);
+    background: rgba(124, 58, 237, 0.05);
 }
 
 /* User Name Cell */
@@ -185,7 +185,7 @@
 }
 
 .role-badge.admin {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(124, 58, 237, 0.15);
     color: var(--color-accent-primary);
 }
 
@@ -213,12 +213,12 @@
 }
 
 .usuario-actions .btn-edit {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     color: var(--color-accent-primary);
 }
 
 .usuario-actions .btn-edit:hover {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(124, 58, 237, 0.2);
 }
 
 /* Empty State */
@@ -301,7 +301,7 @@
 .usuarios-modal-header-icon {
     width: 40px;
     height: 40px;
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
@@ -369,7 +369,7 @@
 .usuarios-form-group select:focus {
     outline: none;
     border-color: var(--color-accent-primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
 .usuarios-form-group input::placeholder {
@@ -482,7 +482,7 @@
 
 .btn-edit-mobile {
     padding: 8px;
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     color: var(--color-accent-primary);
     border: none;
     border-radius: 8px;

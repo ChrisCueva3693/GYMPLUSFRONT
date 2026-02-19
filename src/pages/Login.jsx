@@ -27,7 +27,6 @@ const Login = () => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('expired') === 'true') {
             toast.error("Tu sesión ha expirado. Por favor ingresa nuevamente.");
-            // Clean URL
             window.history.replaceState({}, document.title, "/login");
         }
     }, []);
@@ -55,65 +54,79 @@ const Login = () => {
 
     return (
         <div className="login-page">
-            <div className="login-container animate-scaleIn">
-                <div className="login-header">
-                    <div className="login-logo">
-                        <div className="logo-gradient">GP</div>
-                    </div>
-                    <h1>GymPlus</h1>
-                    <p>Sistema de Gestión de Gimnasio</p>
-                </div>
+            {/* ---- Left: Image Panel ---- */}
+            <div className="login-image-panel">
+                {/* Decorative circles */}
+                <div className="deco-circle dc-1" />
+                <div className="deco-circle dc-2" />
+                <div className="deco-circle dc-3" />
+                <div className="deco-circle dc-4" />
 
-                <form onSubmit={handleSubmit} className="login-form">
-                    <Input
-                        label="Usuario"
-                        name="username"
-                        type="text"
-                        placeholder="Ingresa tu usuario"
-                        value={formData.username}
-                        onChange={handleChange}
-                        icon={<User size={18} />}
-                        fullWidth
-                        autoComplete="username"
-                    />
+                {/* Energy / swirl lines */}
+                <div className="energy-lines" />
 
-                    <Input
-                        label="Contraseña"
-                        name="password"
-                        type="password"
-                        placeholder="Ingresa tu contraseña"
-                        value={formData.password}
-                        onChange={handleChange}
-                        icon={<Lock size={18} />}
-                        fullWidth
-                        autoComplete="current-password"
-                    />
+                {/* Gym illustration */}
+                <img
+                    className="login-gym-image"
+                    src="https://static.vecteezy.com/system/resources/thumbnails/068/118/665/small/gym-kong-mascot-design-png.png"
+                    alt="Bodybuilder illustration"
+                />
 
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        size="lg"
-                        fullWidth
-                        loading={loading}
-                    >
-                        Iniciar Sesión
-                    </Button>
-                </form>
-
-                <div className="login-footer">
-                    <p>
-                        ¿No tienes cuenta?{' '}
-                        <Link to="/register" className="login-link">
-                            Regístrate aquí
-                        </Link>
-                    </p>
+                {/* Brand watermark */}
+                <div className="login-brand">
+                    <div className="brand-name">GymPlus</div>
+                    <div className="brand-sub">Sistema de Gestión</div>
                 </div>
             </div>
 
-            <div className="login-background">
-                <div className="gradient-orb orb-1"></div>
-                <div className="gradient-orb orb-2"></div>
-                <div className="gradient-orb orb-3"></div>
+            {/* ---- Right: Form Panel ---- */}
+            <div className="login-form-panel">
+                <div className="login-form-wrapper">
+                    <h1 className="login-title">Inicio de Sesión</h1>
+                    <p className="login-subtitle">
+                        Ingresa tus credenciales para continuar
+                    </p>
+
+                    <form onSubmit={handleSubmit} className="login-form">
+                        <Input
+                            label="Usuario"
+                            name="username"
+                            type="text"
+                            placeholder="Ingresa tu usuario"
+                            value={formData.username}
+                            onChange={handleChange}
+                            icon={<User size={18} />}
+                            fullWidth
+                            autoComplete="username"
+                        />
+
+                        <Input
+                            label="Contraseña"
+                            name="password"
+                            type="password"
+                            placeholder="Ingresa tu contraseña"
+                            value={formData.password}
+                            onChange={handleChange}
+                            icon={<Lock size={18} />}
+                            fullWidth
+                            autoComplete="current-password"
+                        />
+
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            fullWidth
+                            loading={loading}
+                        >
+                            Iniciar Sesión
+                        </Button>
+                    </form>
+
+                    <div className="login-footer">
+
+                    </div>
+                </div>
             </div>
         </div>
     );

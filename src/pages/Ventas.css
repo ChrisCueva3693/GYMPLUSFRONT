@@ -1,7 +1,7 @@
 /* Ventas Page Styles */
 .ventas-page {
     padding: var(--spacing-xl);
-    padding-top: 6rem;
+    
     min-height: 100vh;
     background: var(--color-bg-primary);
 }
@@ -98,7 +98,7 @@
 }
 
 .ventas-table tr:hover {
-    background: rgba(59, 130, 246, 0.05);
+    background: rgba(124, 58, 237, 0.05);
 }
 
 /* Estado Badge */
@@ -453,7 +453,7 @@
 }
 
 .icon-btn-view:hover {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     color: var(--color-accent-primary);
 }
 

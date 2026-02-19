@@ -1,10 +1,235 @@
+/* ===== CheckIn Page — Animated Gym Background ===== */
 .checkin-page {
-    max-width: 800px;
-    margin: 0 auto;
-    margin: 0 auto;
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     transition: all 0.3s ease;
 }
 
+/* Animated gradient background */
+.checkin-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(-45deg,
+            #0a0e1a,
+            #1a0533,
+            #0f172a,
+            #1e0a3e,
+            #0a0e1a);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Floating glow orbs */
+.checkin-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+.checkin-orb:nth-child(1) {
+    width: 400px;
+    height: 400px;
+    background: #7c3aed;
+    top: -10%;
+    left: -5%;
+    animation: orbFloat1 20s ease-in-out infinite;
+}
+
+.checkin-orb:nth-child(2) {
+    width: 350px;
+    height: 350px;
+    background: #a855f7;
+    bottom: -10%;
+    right: -5%;
+    animation: orbFloat2 18s ease-in-out infinite;
+}
+
+.checkin-orb:nth-child(3) {
+    width: 250px;
+    height: 250px;
+    background: #6d28d9;
+    top: 50%;
+    left: 60%;
+    animation: orbFloat3 22s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(60px, 40px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-30px, 70px) scale(0.95);
+    }
+}
+
+@keyframes orbFloat2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(-50px, -30px) scale(1.05);
+    }
+
+    66% {
+        transform: translate(40px, -60px) scale(0.9);
+    }
+}
+
+@keyframes orbFloat3 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(-80px, -50px) scale(1.15);
+    }
+}
+
+/* Floating particles */
+.checkin-particles {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.35);
+    will-change: transform;
+    transform: translateZ(0);
+    animation: particleFloat linear infinite;
+}
+
+.particle:nth-child(1) {
+    width: 4px;
+    height: 4px;
+    left: 12%;
+    animation-duration: 14s;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    width: 5px;
+    height: 5px;
+    left: 30%;
+    animation-duration: 18s;
+    animation-delay: 3s;
+}
+
+.particle:nth-child(3) {
+    width: 3px;
+    height: 3px;
+    left: 50%;
+    animation-duration: 16s;
+    animation-delay: 1s;
+}
+
+.particle:nth-child(4) {
+    width: 4px;
+    height: 4px;
+    left: 70%;
+    animation-duration: 20s;
+    animation-delay: 5s;
+}
+
+.particle:nth-child(5) {
+    width: 6px;
+    height: 6px;
+    left: 85%;
+    animation-duration: 15s;
+    animation-delay: 2s;
+}
+
+.particle:nth-child(6) {
+    width: 3px;
+    height: 3px;
+    left: 42%;
+    animation-duration: 17s;
+    animation-delay: 4s;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-20vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Grid overlay for techy feel */
+.checkin-grid-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background-image:
+        linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+}
+
+/* ===== Content (above background) ===== */
+.checkin-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 600px;
+    padding: var(--spacing-lg);
+}
+
+/* ===== Fullscreen Mode ===== */
 .checkin-page.fullscreen-mode {
     position: fixed;
     top: 0;
@@ -12,22 +237,37 @@
     width: 100vw;
     height: 100vh;
     z-index: 9999;
-    background-color: var(--color-bg-primary);
+    max-width: none;
+    margin: 0;
+}
+
+.fullscreen-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    max-width: none;
-    margin: 0;
-    padding: var(--spacing-xl);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.25s ease;
 }
 
-.checkin-page.fullscreen-mode .checkin-container {
-    width: 100%;
-    max-width: 800px;
+.fullscreen-toggle-btn:hover {
+    background: rgba(124, 58, 237, 0.25);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: #fff;
+    transform: scale(1.08);
 }
 
-
-
+/* ===== Header ===== */
 .checkin-header {
     text-align: center;
     padding: var(--spacing-lg);
@@ -36,48 +276,92 @@
     align-items: center;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-lg);
-    position: relative;
-}
-
-.fullscreen-toggle-btn {
-    position: absolute;
-    top: var(--spacing-lg);
-    right: var(--spacing-lg);
-    background: transparent;
-    border: none;
-    color: var(--color-text-tertiary);
-    cursor: pointer;
-    padding: var(--spacing-xs);
-    border-radius: 50%;
-    transition: all 0.2s;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.fullscreen-toggle-btn:hover {
-    background: var(--color-bg-element);
-    color: var(--color-text-primary);
 }
 
 .checkin-header svg {
     color: var(--color-accent-primary);
+    filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.4));
 }
 
 .checkin-header h1 {
     font-size: 2.5rem;
     margin: 0;
+    color: #fff;
 }
 
 .checkin-header p {
     font-size: 1.1rem;
-    color: var(--color-text-tertiary);
+    color: rgba(255, 255, 255, 0.6);
 }
 
+/* Brand logo in check-in */
+.checkin-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: var(--spacing-md);
+}
+
+.checkin-brand-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg);
+    color: white;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+}
+
+.checkin-brand-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+/* ===== Search Card ===== */
 .checkin-search-card {
-    padding: var(--spacing-xl) !important;
+    padding: var(--spacing-2xl) var(--spacing-xl) !important;
+    background: rgba(21, 27, 46, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Larger input field for check-in */
+.checkin-search-card .input-field {
+    font-size: 1.5rem;
+    padding: 16px 16px 16px 44px;
+    height: 60px;
+    letter-spacing: 2px;
+}
+
+.checkin-search-card .input-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.checkin-search-card .input-label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Larger buttons */
+.checkin-actions .btn {
+    font-size: 1.1rem;
+    padding: 16px 24px;
+    min-height: 56px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.checkin-actions .btn-register-custom {
+    min-height: 50px;
+    font-size: 1rem;
 }
 
 .checkin-search-form {
@@ -93,7 +377,7 @@
     margin-top: var(--spacing-sm);
 }
 
-/* User Info Card */
+/* ===== User Info Card ===== */
 .user-info-card {
     padding: var(--spacing-2xl) !important;
 }
@@ -126,7 +410,7 @@
     margin-bottom: var(--spacing-xs);
 }
 
-/* Membership Status */
+/* ===== Membership Status ===== */
 .membership-status {
     background: var(--color-bg-elevated);
     border-radius: var(--radius-lg);
@@ -223,7 +507,7 @@
     color: var(--color-accent-primary);
 }
 
-/* No Membership */
+/* ===== No Membership ===== */
 .no-membership {
     text-align: center;
     padding: var(--spacing-3xl);
@@ -245,7 +529,7 @@
     color: var(--color-text-tertiary);
 }
 
-/* Success Screen */
+/* ===== Success Screen ===== */
 .checkin-success {
     min-height: 60vh;
     display: flex;
@@ -273,6 +557,16 @@
     animation: scaleIn 0.5s ease-out;
 }
 
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
 .success-card h1 {
     font-size: 2.5rem;
     margin-bottom: var(--spacing-md);
@@ -284,6 +578,7 @@
     color: var(--color-text-secondary);
 }
 
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
     .membership-dates {
         grid-template-columns: 1fr;
@@ -298,15 +593,30 @@
         font-size: 2rem;
     }
 
-    .checkin-header h1 {
-        font-size: 2rem;
+    .checkin-container {
+        padding: var(--spacing-md);
+    }
+
+    .fullscreen-toggle-btn {
+        top: 12px;
+        right: 12px;
     }
 }
 
-/* Custom Dark Purple Button for Registration */
+@media (max-width: 480px) {
+    .checkin-brand-name {
+        font-size: 1.2rem;
+    }
+
+    .checkin-brand-icon {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* ===== Custom Dark Purple Button for Registration ===== */
 .btn-register-custom {
     background-color: #4c1d95 !important;
-    /* Dark Purple */
     color: white !important;
     border: 1px solid #5b21b6 !important;
     opacity: 1 !important;
@@ -315,4 +625,21 @@
 .btn-register-custom:hover {
     background-color: #5b21b6 !important;
     box-shadow: 0 4px 12px rgba(76, 29, 149, 0.4) !important;
+}
+
+/* ===== Animation entry ===== */
+.animate-fadeIn {
+    animation: fadeIn 0.6s ease-out both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
