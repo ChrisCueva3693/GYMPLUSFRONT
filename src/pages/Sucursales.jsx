@@ -170,13 +170,13 @@ const Sucursales = () => {
             <div className="membresias-grid">
                 {filteredSucursales.map((branch, index) => (
                     <Card key={branch.id} className="membresia-card animate-fadeIn" style={{ animationDelay: `${index * 30}ms` }} hover>
-                        <div className="membresia-header">
-                            <div className="user-avatar-sm" style={{ background: 'var(--gradient-success)' }}>
-                                <MapPin size={20} />
+                        <div className="sucursal-card-header">
+                            <div className="sucursal-icon">
+                                <MapPin size={18} />
                             </div>
-                            <div className="membresia-user">
+                            <div className="sucursal-card-info">
                                 <h3>{branch.nombre}</h3>
-                                <p className="text-tertiary">{branch.gimnasioNombre || 'Gimnasio'}</p>
+                                <p>{branch.gimnasioNombre || 'Gimnasio'}</p>
                             </div>
                         </div>
 
@@ -195,15 +195,15 @@ const Sucursales = () => {
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-md)' }}>
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(branch)} style={{ flex: 1 }}>
-                                <Edit size={16} />
+                        <div className="sucursal-card-actions">
+                            <button className="sucursal-btn-edit" onClick={() => handleEdit(branch)}>
+                                <Edit size={14} />
                                 Editar
-                            </Button>
-                            <Button variant="danger" size="sm" onClick={() => handleDelete(branch.id)} style={{ flex: 1 }}>
-                                <Trash2 size={16} />
+                            </button>
+                            <button className="sucursal-btn-delete" onClick={() => handleDelete(branch.id)}>
+                                <Trash2 size={14} />
                                 Eliminar
-                            </Button>
+                            </button>
                         </div>
                     </Card>
                 ))}

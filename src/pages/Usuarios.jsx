@@ -271,7 +271,6 @@ const Usuarios = () => {
                 initialData={currentUsuario}
                 isEditing={isEditing}
                 onSuccess={handleSuccess}
-                allowedRoles={['ADMIN', 'COACH', 'DEV']}
             />
         </div>
     );

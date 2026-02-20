@@ -215,17 +215,28 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
 
                         <div className="usuarios-form-group">
                             <label>Rol *</label>
-                            <select
-                                value={formData.roles?.[0] || ''}
-                                onChange={(e) => setFormData({ ...formData, roles: [e.target.value] })}
-                                disabled={!!forcedRole}
-                                required
-                            >
-                                <option value="" disabled>Seleccionar rol...</option>
-                                {availableRoles.map(role => (
-                                    <option key={role} value={role}>{role}</option>
-                                ))}
-                            </select>
+                            {(() => {
+                                // Disable role dropdown when: forced role, or editing a user with a higher role than I can assign
+                                const currentRole = formData.roles?.[0];
+                                const isRoleAboveMe = isEditing && currentRole && !availableRoles.includes(currentRole);
+                                const isDisabled = !!forcedRole || isRoleAboveMe;
+                                return (
+                                    <select
+                                        value={currentRole || ''}
+                                        onChange={(e) => setFormData({ ...formData, roles: [e.target.value] })}
+                                        disabled={isDisabled}
+                                        required
+                                    >
+                                        <option value="" disabled>Seleccionar rol...</option>
+                                        {isRoleAboveMe && (
+                                            <option value={currentRole}>{currentRole}</option>
+                                        )}
+                                        {availableRoles.map(role => (
+                                            <option key={role} value={role}>{role}</option>
+                                        ))}
+                                    </select>
+                                );
+                            })()}
                         </div>
                     </div>
 

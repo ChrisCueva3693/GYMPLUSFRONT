@@ -174,17 +174,16 @@ const CheckIn = () => {
             </div>
             <div className="checkin-grid-overlay" />
 
-            {/* Fullscreen toggle */}
-            <button
-                onClick={toggleFullScreen}
-                className="fullscreen-toggle-btn"
-                title={isFullScreen ? "Salir de pantalla completa" : "Pantalla completa"}
-            >
-                {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-            </button>
-
             {/* Main content */}
             <div className="checkin-container">
+                {/* Fullscreen toggle — inside the content area */}
+                <button
+                    onClick={toggleFullScreen}
+                    className="fullscreen-toggle-btn"
+                    title={isFullScreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                >
+                    {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                </button>
                 <div className="checkin-header animate-fadeIn">
                     <div className="checkin-brand">
                         <div className="checkin-brand-icon">GP</div>

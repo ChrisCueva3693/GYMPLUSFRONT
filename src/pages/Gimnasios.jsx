@@ -113,13 +113,13 @@ const Gimnasios = () => {
             <div className="membresias-grid">
                 {filteredGimnasios.map((gym, index) => (
                     <Card key={gym.id} className="membresia-card animate-fadeIn" style={{ animationDelay: `${index * 30}ms` }} hover>
-                        <div className="membresia-header">
-                            <div className="user-avatar-sm" style={{ background: 'var(--gradient-blue)' }}>
-                                <Building2 size={20} />
+                        <div className="sucursal-card-header">
+                            <div className="sucursal-icon" style={{ background: 'var(--gradient-blue)', boxShadow: '0 2px 10px rgba(99, 102, 241, 0.25)' }}>
+                                <Building2 size={18} />
                             </div>
-                            <div className="membresia-user">
+                            <div className="sucursal-card-info">
                                 <h3>{gym.nombre}</h3>
-                                <p className="text-tertiary">{gym.emailContacto || 'Sin email'}</p>
+                                <p>{gym.emailContacto || 'Sin email'}</p>
                             </div>
                         </div>
 
@@ -138,15 +138,15 @@ const Gimnasios = () => {
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-md)' }}>
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(gym)} style={{ flex: 1 }}>
-                                <Edit size={16} />
+                        <div className="sucursal-card-actions">
+                            <button className="sucursal-btn-edit" onClick={() => handleEdit(gym)}>
+                                <Edit size={14} />
                                 Editar
-                            </Button>
-                            <Button variant="danger" size="sm" onClick={() => handleDelete(gym.id)} style={{ flex: 1 }}>
-                                <Trash2 size={16} />
+                            </button>
+                            <button className="sucursal-btn-delete" onClick={() => handleDelete(gym.id)}>
+                                <Trash2 size={14} />
                                 Eliminar
-                            </Button>
+                            </button>
                         </div>
                     </Card>
                 ))}
