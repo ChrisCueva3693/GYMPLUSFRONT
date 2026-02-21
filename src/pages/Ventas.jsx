@@ -532,7 +532,7 @@ const Ventas = () => {
                                             >
                                                 <option value="">Seleccionar...</option>
                                                 {tiposPago.map(tp => (
-                                                    <option key={tp.id} value={tp.id}>{tp.nombre}</option>
+                                                    <option key={tp.id} value={tp.id}>{tp.descripcion}</option>
                                                 ))}
                                             </select>
                                         </div>

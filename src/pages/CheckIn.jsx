@@ -13,6 +13,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useBranch } from '../context/BranchContext';
+import { useAuth } from '../hooks/useAuth';
 import './CheckIn.css';
 
 const CheckIn = () => {
@@ -28,6 +29,7 @@ const CheckIn = () => {
     const [isFullScreen, setIsFullScreen] = useState(false);
 
     const { selectedBranchId } = useBranch();
+    const { user } = useAuth();
 
     // Toggle Full Screennn
     const toggleFullScreen = () => {
@@ -108,7 +110,7 @@ const CheckIn = () => {
         setLoading(true);
         try {
             // 1. Verify User
-            const result = await checkinService.verifyUser(parseInt(userId));
+            const result = await checkinService.verifyUser(userId.trim());
             setUserData(result.user);
             setMembershipData(result.membership);
 
@@ -246,6 +248,10 @@ const CheckIn = () => {
                     onClose={() => setIsRegisterModalOpen(false)}
                     isEditing={false}
                     forcedRole="CLIENTE"
+                    initialData={{
+                        idGimnasio: user?.idGimnasio,
+                        idSucursalPorDefecto: selectedBranchId || user?.idSucursalPorDefecto
+                    }}
                     onSuccess={() => {
                         toast.success('Usuario registrado exitosamente');
                     }}

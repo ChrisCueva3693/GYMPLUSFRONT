@@ -111,6 +111,13 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                     setSelectedGimnasioId(String(initialData.idGimnasio));
                 }
             } else {
+                // Determine idGimnasio and idSucursalPorDefecto
+                // If initialData provides them, use those (e.g. CheckIn page passes branch context)
+                // If DEV without forcedRole (Usuarios page), leave null for manual selection
+                // Otherwise, use logged-in user's values
+                const gimnasioId = initialData?.idGimnasio || (isDev && !forcedRole ? null : user?.idGimnasio);
+                const sucursalId = initialData?.idSucursalPorDefecto || (isDev && !forcedRole ? null : user?.idSucursalPorDefecto);
+
                 setFormData({
                     nombre: '',
                     apellido: '',
@@ -121,10 +128,10 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                     cedula: '',
                     cedulaTipo: 'CEDULA',
                     roles: forcedRole ? [forcedRole] : [],
-                    idGimnasio: isDev ? null : user?.idGimnasio,
-                    idSucursalPorDefecto: isDev ? null : user?.idSucursalPorDefecto
+                    idGimnasio: gimnasioId,
+                    idSucursalPorDefecto: sucursalId
                 });
-                if (isDev) {
+                if (isDev && !forcedRole) {
                     setSelectedGimnasioId('');
                     setSucursales([]);
                 }
