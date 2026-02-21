@@ -317,7 +317,8 @@
 }
 
 .membresias-form-group select,
-.membresias-form-group input {
+.membresias-form-group input,
+.membresias-form-group textarea {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-bg-tertiary);
@@ -325,6 +326,12 @@
     border-radius: var(--radius-lg);
     color: var(--color-text-primary);
     font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.membresias-form-group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .membresias-modal-footer {
