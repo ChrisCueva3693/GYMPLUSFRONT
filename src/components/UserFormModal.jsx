@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Edit, UserPlus } from 'lucide-react';
+import { X, Save, Edit, UserPlus, Building2, MapPin } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 
 const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, forcedRole = null, allowedRoles = null }) => {
     const { user } = useAuth();
+    const isDev = user?.roles?.includes('DEV');
+
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
@@ -15,25 +17,27 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
         telefono: '',
         cedula: '',
         cedulaTipo: 'CEDULA',
-        roles: [], // Empty by default
+        roles: [],
         idGimnasio: null,
         idSucursalPorDefecto: null
     });
 
+    // DEV-only: empresa and sucursal lists
+    const [gimnasios, setGimnasios] = useState([]);
+    const [sucursales, setSucursales] = useState([]);
+    const [loadingGimnasios, setLoadingGimnasios] = useState(false);
+    const [loadingSucursales, setLoadingSucursales] = useState(false);
+    const [selectedGimnasioId, setSelectedGimnasioId] = useState('');
+
     // Roles logic
     let availableRoles = [];
 
-    // 1. Forced Role (Direct restriction, e.g. for Clientes page)
     if (forcedRole) {
         availableRoles = [forcedRole];
-    }
-    // 2. Allowed Roles (Explicit list, e.g. for Usuarios page)
-    else if (allowedRoles) {
+    } else if (allowedRoles) {
         availableRoles = allowedRoles;
-    }
-    // 3. Fallback based on current user (if no props provided)
-    else {
-        if (user?.roles?.includes('DEV')) {
+    } else {
+        if (isDev) {
             availableRoles = ['DEV', 'ADMIN', 'COACH', 'CLIENTE'];
         } else if (user?.roles?.includes('ADMIN')) {
             availableRoles = ['ADMIN', 'COACH', 'CLIENTE'];
@@ -42,6 +46,49 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
         }
     }
 
+    // Load gimnasios when modal opens (DEV only)
+    useEffect(() => {
+        if (isOpen && isDev) {
+            loadGimnasios();
+        }
+    }, [isOpen, isDev]);
+
+    // Load sucursales when gimnasio changes
+    useEffect(() => {
+        if (selectedGimnasioId) {
+            loadSucursales(selectedGimnasioId);
+        } else {
+            setSucursales([]);
+        }
+    }, [selectedGimnasioId]);
+
+    const loadGimnasios = async () => {
+        setLoadingGimnasios(true);
+        try {
+            const response = await apiClient.get('/api/gimnasios');
+            setGimnasios(response.data);
+        } catch (error) {
+            console.error('Error loading gimnasios:', error);
+            toast.error('Error al cargar empresas');
+        } finally {
+            setLoadingGimnasios(false);
+        }
+    };
+
+    const loadSucursales = async (idGimnasio) => {
+        setLoadingSucursales(true);
+        try {
+            const response = await apiClient.get(`/api/sucursales/gimnasio/${idGimnasio}`);
+            setSucursales(response.data);
+        } catch (error) {
+            console.error('Error loading sucursales:', error);
+            toast.error('Error al cargar sucursales');
+        } finally {
+            setLoadingSucursales(false);
+        }
+    };
+
+    // Init form data when modal opens
     useEffect(() => {
         if (isOpen) {
             if (initialData && isEditing) {
@@ -51,14 +98,18 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                     apellido: initialData.apellido || '',
                     email: initialData.email || '',
                     username: initialData.username || '',
-                    password: '', // Don't show password
+                    password: '',
                     telefono: initialData.telefono || '',
                     cedula: initialData.cedula || '',
                     cedulaTipo: initialData.cedulaTipo || 'CEDULA',
-                    roles: initialData.roles || (forcedRole ? [forcedRole] : []), // Use existing or forced, otherwise empty
+                    roles: initialData.roles || (forcedRole ? [forcedRole] : []),
                     idGimnasio: initialData.idGimnasio || user?.idGimnasio,
                     idSucursalPorDefecto: initialData.idSucursalPorDefecto || user?.idSucursalPorDefecto
                 });
+                // If DEV and editing, pre-select the gimnasio
+                if (isDev && initialData.idGimnasio) {
+                    setSelectedGimnasioId(String(initialData.idGimnasio));
+                }
             } else {
                 setFormData({
                     nombre: '',
@@ -69,13 +120,35 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                     telefono: '',
                     cedula: '',
                     cedulaTipo: 'CEDULA',
-                    roles: forcedRole ? [forcedRole] : [], // Empty if not forced
-                    idGimnasio: user?.idGimnasio,
-                    idSucursalPorDefecto: user?.idSucursalPorDefecto
+                    roles: forcedRole ? [forcedRole] : [],
+                    idGimnasio: isDev ? null : user?.idGimnasio,
+                    idSucursalPorDefecto: isDev ? null : user?.idSucursalPorDefecto
                 });
+                if (isDev) {
+                    setSelectedGimnasioId('');
+                    setSucursales([]);
+                }
             }
         }
-    }, [isOpen, initialData, isEditing, user, forcedRole, allowedRoles]);
+    }, [isOpen, initialData, isEditing, user, forcedRole, allowedRoles, isDev]);
+
+    const handleGimnasioChange = (e) => {
+        const gimId = e.target.value;
+        setSelectedGimnasioId(gimId);
+        setFormData(prev => ({
+            ...prev,
+            idGimnasio: gimId ? Number(gimId) : null,
+            idSucursalPorDefecto: null // Reset sucursal when empresa changes
+        }));
+    };
+
+    const handleSucursalChange = (e) => {
+        const sucId = e.target.value;
+        setFormData(prev => ({
+            ...prev,
+            idSucursalPorDefecto: sucId ? Number(sucId) : null
+        }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -85,6 +158,18 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
             return;
         }
 
+        // DEV must select empresa and sucursal
+        if (isDev && !forcedRole) {
+            if (!formData.idGimnasio) {
+                toast.error('Debe seleccionar una empresa');
+                return;
+            }
+            if (!formData.idSucursalPorDefecto) {
+                toast.error('Debe seleccionar una sucursal');
+                return;
+            }
+        }
+
         try {
             const payload = {
                 ...formData,
@@ -92,7 +177,6 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                 idSucursalPorDefecto: formData.idSucursalPorDefecto || user?.idSucursalPorDefecto
             };
 
-            // Remove password if empty (for update)
             if (isEditing && !payload.password) {
                 delete payload.password;
             }
@@ -135,6 +219,50 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
 
                 <form onSubmit={handleSubmit}>
                     <div className="usuarios-modal-body">
+                        {/* DEV-only: Empresa & Sucursal selectors */}
+                        {isDev && !forcedRole && (
+                            <div className="usuarios-form-row">
+                                <div className="usuarios-form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Building2 size={14} color="var(--color-accent-primary)" />
+                                        Empresa *
+                                    </label>
+                                    <select
+                                        value={selectedGimnasioId}
+                                        onChange={handleGimnasioChange}
+                                        required
+                                        disabled={loadingGimnasios}
+                                    >
+                                        <option value="" disabled>
+                                            {loadingGimnasios ? 'Cargando...' : 'Seleccionar empresa...'}
+                                        </option>
+                                        {gimnasios.map(g => (
+                                            <option key={g.id} value={g.id}>{g.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="usuarios-form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <MapPin size={14} color="var(--color-accent-primary)" />
+                                        Sucursal *
+                                    </label>
+                                    <select
+                                        value={formData.idSucursalPorDefecto || ''}
+                                        onChange={handleSucursalChange}
+                                        required
+                                        disabled={!selectedGimnasioId || loadingSucursales}
+                                    >
+                                        <option value="" disabled>
+                                            {loadingSucursales ? 'Cargando...' : !selectedGimnasioId ? 'Primero seleccione empresa' : 'Seleccionar sucursal...'}
+                                        </option>
+                                        {sucursales.map(s => (
+                                            <option key={s.id} value={s.id}>{s.nombre} — {s.ciudad || 'Sin ciudad'}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="usuarios-form-row">
                             <div className="usuarios-form-group">
                                 <label>Nombre *</label>
@@ -216,7 +344,6 @@ const UserFormModal = ({ isOpen, onClose, initialData, isEditing, onSuccess, for
                         <div className="usuarios-form-group">
                             <label>Rol *</label>
                             {(() => {
-                                // Disable role dropdown when: forced role, or editing a user with a higher role than I can assign
                                 const currentRole = formData.roles?.[0];
                                 const isRoleAboveMe = isEditing && currentRole && !availableRoles.includes(currentRole);
                                 const isDisabled = !!forcedRole || isRoleAboveMe;
