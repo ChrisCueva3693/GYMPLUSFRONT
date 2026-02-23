@@ -1,7 +1,7 @@
 /* Ventas Page Styles */
 .ventas-page {
     padding: var(--spacing-xl);
-    
+
     min-height: 100vh;
     background: var(--color-bg-primary);
 }
@@ -544,9 +544,6 @@
     color: var(--color-text-primary);
 }
 
-padding: 20px;
-}
-
 /* Response Utilities & Mobile Support */
 .mobile-only {
     display: none;
@@ -633,4 +630,131 @@ padding: 20px;
         border: none;
         background: transparent;
     }
+}
+
+/* ===== Inline Products ===== */
+.productos-inline {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.productos-inline-mobile {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    padding: 4px 0;
+    line-height: 1.4;
+}
+
+/* ===== Registrado Por ===== */
+.registrado-por-text {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.registrado-por-mobile {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+}
+
+/* ===== Saldo Pendiente ===== */
+.saldo-pendiente-value {
+    color: #f59e0b;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.saldo-pendiente-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+/* ===== Abono Button ===== */
+.btn-abono-inline {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-abono-inline:hover {
+    background: rgba(245, 158, 11, 0.25);
+    transform: translateY(-1px);
+}
+
+/* ===== Abono Modal ===== */
+.abono-modal {
+    max-width: 500px;
+}
+
+.abono-info-card {
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.abono-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.abono-info-row strong {
+    color: var(--color-text-primary);
+}
+
+.abono-info-row.saldo-highlight {
+    border-top: 1px solid var(--color-border-primary);
+    margin-top: 6px;
+    padding-top: 10px;
+}
+
+.abono-info-row.saldo-highlight strong {
+    color: #f59e0b;
+    font-size: 1.1rem;
+}
+
+/* ===== Partial Payment Notice ===== */
+.partial-payment-notice {
+    margin-top: var(--spacing-sm);
+    padding: 10px 14px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-lg);
+    font-size: 0.85rem;
+    color: #f59e0b;
+    line-height: 1.4;
+}
+
+/* ===== Mobile Card Footer ===== */
+.venta-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border-primary);
 }

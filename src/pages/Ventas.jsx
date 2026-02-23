@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, X, Trash2, Eye } from 'lucide-react';
+import { ShoppingCart, Plus, X, Trash2, Eye, DollarSign, User } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';
 import apiClient from '../services/apiClient';
 import ventaService from '../services/ventaService';
 import productoService from '../services/productoService';
 import toast, { Toaster } from 'react-hot-toast';
-import { useAuth } from '../hooks/useAuth'; // Add import
+import { useAuth } from '../hooks/useAuth';
 import './Ventas.css';
 
 const Ventas = () => {
@@ -13,7 +13,7 @@ const Ventas = () => {
     const [loading, setLoading] = useState(true);
 
     // Modal State
-    const { user } = useAuth(); // Import useAuth
+    const { user } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [productos, setProductos] = useState([]);
@@ -23,7 +23,7 @@ const Ventas = () => {
     const [selectedCliente, setSelectedCliente] = useState('');
 
     // Split Payment State
-    const [pagos, setPagos] = useState([]); // [{ tipoPagoId, nombre, monto }]
+    const [pagos, setPagos] = useState([]);
     const [currentPagoType, setCurrentPagoType] = useState('');
     const [currentPagoMonto, setCurrentPagoMonto] = useState('');
 
@@ -31,7 +31,17 @@ const Ventas = () => {
     const [selectedProducto, setSelectedProducto] = useState('');
     const [cantidad, setCantidad] = useState(1);
     const [submitting, setSubmitting] = useState(false);
-    const [selectedVenta, setSelectedVenta] = useState(null); // For detail modal
+    const [selectedVenta, setSelectedVenta] = useState(null);
+
+    // Abono Modal State
+    const [isAbonoModalOpen, setIsAbonoModalOpen] = useState(false);
+    const [abonoVenta, setAbonoVenta] = useState(null);
+    const [abonoTipoPago, setAbonoTipoPago] = useState('');
+    const [abonoMonto, setAbonoMonto] = useState('');
+    const [abonoSubmitting, setAbonoSubmitting] = useState(false);
+
+    const isAdmin = user && (user.roles.includes('ADMIN') || user.roles.includes('DEV'));
+    const canRegisterAbono = user && (user.roles.includes('ADMIN') || user.roles.includes('DEV') || user.roles.includes('COACH'));
 
     useEffect(() => {
         fetchVentas();
@@ -52,23 +62,17 @@ const Ventas = () => {
 
     const openModal = async () => {
         try {
-            // Fetch data for the modal
             const [clientesRes, productosRes, tiposPagoRes] = await Promise.all([
                 apiClient.get('/api/usuarios'),
                 productoService.getAll(),
                 apiClient.get('/api/tipos-pago')
             ]);
 
-            // Filter clients if user is not DEV
             let filteredClientes = clientesRes.data;
             if (user && !user.roles.includes('DEV')) {
-                // Filter by Gym first (Privacy between companies)
                 if (user.idGimnasio) {
                     filteredClientes = filteredClientes.filter(c => c.idGimnasio === user.idGimnasio);
                 }
-
-                // If user has a specific branch assigned, filter by that branch too
-                // (Requirement: "deberia solo aparecer los de la sucursal")
                 if (user.idSucursalPorDefecto) {
                     filteredClientes = filteredClientes.filter(c => c.idSucursalPorDefecto === user.idSucursalPorDefecto);
                 }
@@ -78,7 +82,6 @@ const Ventas = () => {
             setProductos(productosRes);
             setTiposPago(tiposPagoRes.data);
 
-            // Reset form
             setSelectedCliente('');
             setPagos([]);
             setCurrentPagoType('');
@@ -104,7 +107,6 @@ const Ventas = () => {
         const producto = productos.find(p => p.id === parseInt(selectedProducto));
         if (!producto) return;
 
-        // Check stock
         const existingItem = cart.find(item => item.productoId === producto.id);
         const totalCantidad = (existingItem?.cantidad || 0) + cantidad;
 
@@ -141,7 +143,6 @@ const Ventas = () => {
         return cart.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
     };
 
-    // Payment Logic
     const getTotalPagado = () => {
         return pagos.reduce((sum, p) => sum + parseFloat(p.monto), 0);
     };
@@ -162,7 +163,7 @@ const Ventas = () => {
         const tipo = tiposPago.find(tp => tp.id === parseInt(currentPagoType));
         if (!tipo) return;
 
-        if (getTotalPagado() + monto > getTotal() + 0.01) { // small tolerance
+        if (getTotalPagado() + monto > getTotal() + 0.01) {
             toast.error("El monto excede el total a pagar");
             return;
         }
@@ -183,7 +184,6 @@ const Ventas = () => {
         setPagos(newPagos);
     };
 
-    // Auto-fill amount when type selected
     useEffect(() => {
         if (currentPagoType) {
             const faltante = getFaltante();
@@ -193,7 +193,6 @@ const Ventas = () => {
         }
     }, [currentPagoType]);
 
-
     const handleSubmit = async () => {
         if (!selectedCliente || cart.length === 0) {
             toast.error('Complete la información de venta y productos');
@@ -202,14 +201,6 @@ const Ventas = () => {
 
         if (pagos.length === 0) {
             toast.error('Debe agregar al menos un pago');
-            return;
-        }
-
-        const total = getTotal();
-        const pagado = getTotalPagado();
-
-        if (Math.abs(pagado - total) > 0.05) { // 5 cent tolerance
-            toast.error(`El pago total ($${pagado.toFixed(2)}) no coincide con el total de la venta ($${total.toFixed(2)})`);
             return;
         }
 
@@ -228,7 +219,9 @@ const Ventas = () => {
             };
 
             await ventaService.createVenta(request);
-            toast.success('Venta registrada exitosamente');
+            toast.success(getFaltante() > 0.05
+                ? 'Venta registrada con saldo pendiente'
+                : 'Venta registrada exitosamente');
             closeModal();
             fetchVentas();
         } catch (error) {
@@ -237,6 +230,56 @@ const Ventas = () => {
             toast.error(msg);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    // ===== ABONO LOGIC =====
+    const openAbonoModal = async (venta) => {
+        try {
+            const tiposPagoRes = await apiClient.get('/api/tipos-pago');
+            setTiposPago(tiposPagoRes.data);
+        } catch (error) {
+            toast.error('Error al cargar tipos de pago');
+            return;
+        }
+        setAbonoVenta(venta);
+        setAbonoMonto(venta.saldoPendiente?.toFixed(2) || '');
+        setAbonoTipoPago('');
+        setIsAbonoModalOpen(true);
+    };
+
+    const closeAbonoModal = () => {
+        setIsAbonoModalOpen(false);
+        setAbonoVenta(null);
+    };
+
+    const handleAbonoSubmit = async () => {
+        if (!abonoTipoPago || !abonoMonto) {
+            toast.error('Complete todos los campos');
+            return;
+        }
+
+        const monto = parseFloat(abonoMonto);
+        if (monto <= 0) {
+            toast.error('El monto debe ser mayor a 0');
+            return;
+        }
+
+        setAbonoSubmitting(true);
+        try {
+            await ventaService.registrarAbono(abonoVenta.id, {
+                tipoPagoId: parseInt(abonoTipoPago),
+                monto: monto,
+                referencia: 'ABONO'
+            });
+            toast.success('Abono registrado exitosamente');
+            closeAbonoModal();
+            fetchVentas();
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Error al registrar abono';
+            toast.error(msg);
+        } finally {
+            setAbonoSubmitting(false);
         }
     };
 
@@ -250,6 +293,12 @@ const Ventas = () => {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    // Helper to display products inline
+    const getProductosResumen = (venta) => {
+        if (!venta.detalles || venta.detalles.length === 0) return '-';
+        return venta.detalles.map(d => `${d.cantidad}x ${d.productoNombre}`).join(', ');
     };
 
     return (
@@ -285,9 +334,13 @@ const Ventas = () => {
                                     <tr>
                                         <th>ID</th>
                                         <th>Cliente</th>
+                                        <th>Productos</th>
                                         <th>Fecha</th>
                                         <th>Total</th>
+                                        <th>Pendiente</th>
                                         <th>Estado</th>
+                                        <th>Registrado por</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -295,15 +348,34 @@ const Ventas = () => {
                                         <tr key={venta.id}>
                                             <td>#{venta.id}</td>
                                             <td>{venta.clienteNombre}</td>
+                                            <td>
+                                                <span className="productos-inline">
+                                                    {getProductosResumen(venta)}
+                                                </span>
+                                            </td>
                                             <td>{formatDate(venta.fechaVenta)}</td>
                                             <td style={{ fontWeight: 700, color: 'var(--color-accent-primary)' }}>
                                                 ${venta.total?.toFixed(2)}
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
-                                                        {venta.estado}
-                                                    </span>
+                                                {venta.saldoPendiente > 0 ? (
+                                                    <span className="saldo-pendiente-value">${venta.saldoPendiente?.toFixed(2)}</span>
+                                                ) : (
+                                                    <span style={{ color: 'var(--color-text-muted)' }}>$0.00</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <span className={`estado-badge ${venta.estado?.toLowerCase()}`}>
+                                                    {venta.estado}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className="registrado-por-text">
+                                                    {venta.registradoPorNombre || '-'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                                                     <button
                                                         className="icon-btn-view"
                                                         onClick={() => setSelectedVenta(venta)}
@@ -311,6 +383,15 @@ const Ventas = () => {
                                                     >
                                                         <Eye size={18} />
                                                     </button>
+                                                    {canRegisterAbono && venta.saldoPendiente > 0 && (
+                                                        <button
+                                                            className="btn-abono-inline"
+                                                            onClick={() => openAbonoModal(venta)}
+                                                            title="Registrar Abono"
+                                                        >
+                                                            <DollarSign size={16} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -321,7 +402,7 @@ const Ventas = () => {
                             {/* Mobile Card Layout */}
                             <div className="ventas-mobile-list mobile-only">
                                 {ventas.map((venta) => (
-                                    <div className="venta-card" key={venta.id} onClick={() => setSelectedVenta(venta)}>
+                                    <div className="venta-card" key={venta.id}>
                                         <div className="venta-card-header">
                                             <div className="venta-id">
                                                 <ShoppingCart size={14} /> <span>Venta #{venta.id}</span>
@@ -334,8 +415,34 @@ const Ventas = () => {
                                             <div className="client-name">{venta.clienteNombre}</div>
                                             <div className="venta-total">${venta.total?.toFixed(2)}</div>
                                         </div>
-                                        <div className="venta-date">
-                                            {formatDate(venta.fechaVenta)}
+                                        <div className="productos-inline-mobile">
+                                            {getProductosResumen(venta)}
+                                        </div>
+                                        {venta.saldoPendiente > 0 && (
+                                            <div className="saldo-pendiente-row">
+                                                <span>Saldo Pendiente:</span>
+                                                <span className="saldo-pendiente-value">${venta.saldoPendiente?.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        <div className="venta-card-footer">
+                                            <div>
+                                                <div className="venta-date">{formatDate(venta.fechaVenta)}</div>
+                                                {venta.registradoPorNombre && (
+                                                    <div className="registrado-por-mobile">
+                                                        <User size={12} /> {venta.registradoPorNombre}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button className="icon-btn-view" onClick={() => setSelectedVenta(venta)}>
+                                                    <Eye size={18} />
+                                                </button>
+                                                {canRegisterAbono && venta.saldoPendiente > 0 && (
+                                                    <button className="btn-abono-inline" onClick={() => openAbonoModal(venta)}>
+                                                        <DollarSign size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -380,6 +487,18 @@ const Ventas = () => {
                                         {selectedVenta.estado}
                                     </span>
                                 </div>
+                                {selectedVenta.saldoPendiente > 0 && (
+                                    <div className="detail-item">
+                                        <span className="label">Saldo Pendiente</span>
+                                        <span className="value" style={{ color: '#f59e0b', fontWeight: 700 }}>
+                                            ${selectedVenta.saldoPendiente?.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="detail-item">
+                                    <span className="label">Registrado por</span>
+                                    <span className="value">{selectedVenta.registradoPorNombre || '-'}</span>
+                                </div>
                             </div>
 
                             <h3 className="detail-subtitle">Productos</h3>
@@ -402,8 +521,85 @@ const Ventas = () => {
                             </div>
                         </div>
                         <div className="ventas-modal-footer">
+                            {canRegisterAbono && selectedVenta.saldoPendiente > 0 && (
+                                <button className="ventas-btn-submit" onClick={() => {
+                                    setSelectedVenta(null);
+                                    openAbonoModal(selectedVenta);
+                                }}>
+                                    <DollarSign size={16} />
+                                    Registrar Abono
+                                </button>
+                            )}
                             <button className="ventas-btn-cancel" onClick={() => setSelectedVenta(null)}>
                                 Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Abono Modal */}
+            {isAbonoModalOpen && abonoVenta && (
+                <div className="ventas-modal-overlay" onClick={closeAbonoModal}>
+                    <div className="ventas-modal abono-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="ventas-modal-header">
+                            <h2><DollarSign size={20} /> Registrar Abono</h2>
+                            <button className="ventas-modal-close" onClick={closeAbonoModal}>
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="ventas-modal-body">
+                            <div className="abono-info-card">
+                                <div className="abono-info-row">
+                                    <span>Venta</span>
+                                    <strong>#{abonoVenta.id} — {abonoVenta.clienteNombre}</strong>
+                                </div>
+                                <div className="abono-info-row">
+                                    <span>Total de Venta</span>
+                                    <strong>${abonoVenta.total?.toFixed(2)}</strong>
+                                </div>
+                                <div className="abono-info-row saldo-highlight">
+                                    <span>Saldo Pendiente</span>
+                                    <strong>${abonoVenta.saldoPendiente?.toFixed(2)}</strong>
+                                </div>
+                            </div>
+
+                            <div className="ventas-form-group">
+                                <label>Método de Pago *</label>
+                                <select
+                                    value={abonoTipoPago}
+                                    onChange={(e) => setAbonoTipoPago(e.target.value)}
+                                >
+                                    <option value="">Seleccionar...</option>
+                                    {tiposPago.map(tp => (
+                                        <option key={tp.id} value={tp.id}>{tp.descripcion}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="ventas-form-group">
+                                <label>Monto del Abono *</label>
+                                <input
+                                    type="number"
+                                    value={abonoMonto}
+                                    onChange={(e) => setAbonoMonto(e.target.value)}
+                                    step="0.01"
+                                    max={abonoVenta.saldoPendiente}
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+                        <div className="ventas-modal-footer">
+                            <button className="ventas-btn-cancel" onClick={closeAbonoModal}>
+                                Cancelar
+                            </button>
+                            <button
+                                className="ventas-btn-submit"
+                                onClick={handleAbonoSubmit}
+                                disabled={abonoSubmitting || !abonoTipoPago || !abonoMonto}
+                            >
+                                <DollarSign size={16} />
+                                {abonoSubmitting ? 'Registrando...' : 'Registrar Abono'}
                             </button>
                         </div>
                     </div>
@@ -455,7 +651,7 @@ const Ventas = () => {
                                         <SearchableSelect
                                             options={productos.filter(p => p.stockActual > 0).map(p => ({
                                                 value: p.id,
-                                                label: `${p.nombre} - $${p.precioUnitario} (Stock: ${p.stockActual})`,
+                                                label: `[${p.codigo || 'S/C'}] ${p.nombre} - $${p.precioUnitario} (Stock: ${p.stockActual})`,
                                                 nombre: p.nombre
                                             }))}
                                             value={selectedProducto}
@@ -516,12 +712,11 @@ const Ventas = () => {
                                 )}
                             </div>
 
-                            {/* Payment Section (Split Payment) */}
+                            {/* Payment Section */}
                             {cart.length > 0 && (
                                 <div className="ventas-section">
                                     <div className="ventas-section-title">Pagos</div>
 
-                                    {/* Add Payment Form */}
                                     <div className="payment-adder" style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-end' }}>
                                         <div className="ventas-form-group" style={{ flex: 1, marginBottom: 0 }}>
                                             <label style={{ fontSize: '0.8rem' }}>Método</label>
@@ -598,11 +793,16 @@ const Ventas = () => {
                                         </div>
                                         <div>
                                             <span style={{ color: 'var(--color-text-muted)' }}>Faltante:</span>
-                                            <span style={{ fontWeight: 700, marginLeft: '5px', color: getFaltante() > 0 ? 'var(--color-error)' : 'var(--color-text-muted)' }}>
+                                            <span style={{ fontWeight: 700, marginLeft: '5px', color: getFaltante() > 0 ? '#f59e0b' : 'var(--color-text-muted)' }}>
                                                 ${getFaltante().toFixed(2)}
                                             </span>
                                         </div>
                                     </div>
+                                    {getFaltante() > 0.05 && pagos.length > 0 && (
+                                        <div className="partial-payment-notice">
+                                            La venta se creará con estado <strong>PENDIENTE</strong> y un saldo de <strong>${getFaltante().toFixed(2)}</strong>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -616,10 +816,10 @@ const Ventas = () => {
                                 type="button"
                                 className="ventas-btn-submit"
                                 onClick={handleSubmit}
-                                disabled={submitting || cart.length === 0 || getFaltante() > 0.05}
+                                disabled={submitting || cart.length === 0 || pagos.length === 0}
                             >
                                 <ShoppingCart size={16} />
-                                {submitting ? 'Procesando...' : 'Completar Venta'}
+                                {submitting ? 'Procesando...' : (getFaltante() > 0.05 ? 'Crear con Saldo Pendiente' : 'Completar Venta')}
                             </button>
                         </div>
                     </div>

@@ -1,8 +1,9 @@
 import React from 'react';
 import QRCode from 'react-qr-code';
+import Barcode from 'react-barcode';
 import { useAuth } from '../hooks/useAuth';
 import './Inicio.css';
-import { QrCode, User } from 'lucide-react';
+import { QrCode, ScanBarcode, User } from 'lucide-react';
 
 const Inicio = () => {
     const { user } = useAuth();
@@ -37,6 +38,32 @@ const Inicio = () => {
                                 <p>No se encontró cédula registrada.</p>
                             </div>
                         )}
+                    </div>
+
+                    <div className="barcode-section">
+                        <div className="barcode-header">
+                            <ScanBarcode size={20} color="var(--color-accent-primary)" />
+                            <span>Código de Barras</span>
+                        </div>
+                        <div className="barcode-wrapper">
+                            {user?.cedula ? (
+                                <div className="barcode-box">
+                                    <Barcode
+                                        value={user.cedula}
+                                        format="CODE128"
+                                        width={2}
+                                        height={60}
+                                        displayValue={false}
+                                        background="#FFFFFF"
+                                        lineColor="#000000"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="qr-error">
+                                    <p>No se encontró cédula registrada.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="user-details-card">

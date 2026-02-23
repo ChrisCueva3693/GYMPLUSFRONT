@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Calendar, DollarSign, Wallet, CreditCard, ArrowRightLeft, Eye, X } from 'lucide-react';
+import { Download, Calendar, DollarSign, Wallet, CreditCard, ArrowRightLeft, Eye, X, ShoppingCart, Package } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import toast, { Toaster } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
@@ -12,6 +12,7 @@ const Reportes = () => {
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState(null);
     const [selectedPago, setSelectedPago] = useState(null); // For detail modal
+    const [showProductosModal, setShowProductosModal] = useState(false); // For products modal
     const [dateRange, setDateRange] = useState({
         desde: new Date().toISOString().split('T')[0],
         hasta: new Date().toISOString().split('T')[0]
@@ -77,9 +78,12 @@ const Reportes = () => {
         const dataToExport = stats.detallePagos.map(p => ({
             ID: p.idPago,
             Fecha: new Date(p.fecha).toLocaleString(),
+            Cliente: p.clienteNombre || '-',
             Concepto: p.concepto,
+            Detalles: p.detalles ? p.detalles.join(' | ') : '-',
             'Tipo Pago': p.tipoPago,
             Monto: p.monto,
+            'Registrado Por': p.registradoPorNombre || '-',
             Referencia: p.referencia || '-'
         }));
 
@@ -88,7 +92,7 @@ const Reportes = () => {
 
         // Add Totals Row
         XLSX.utils.sheet_add_aoa(ws, [
-            ['', '', '', 'TOTAL GENERAL', stats.totalGeneral]
+            ['', '', '', '', '', 'TOTAL GENERAL', stats.totalGeneral]
         ], { origin: -1 });
 
         XLSX.utils.book_append_sheet(wb, ws, "Ingresos");
@@ -153,10 +157,16 @@ const Reportes = () => {
                         />
                     </div>
 
-                    <button className="btn-export" onClick={exportToExcel}>
-                        <Download size={18} />
-                        Exportar Excel
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn-secondary" onClick={() => setShowProductosModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-border)', borderRadius: '8px', color: 'var(--color-text-primary)', cursor: 'pointer', outline: 'none' }}>
+                            <ShoppingCart size={18} />
+                            Productos Vendidos
+                        </button>
+                        <button className="btn-export" onClick={exportToExcel}>
+                            <Download size={18} />
+                            Exportar Excel
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -203,6 +213,7 @@ const Reportes = () => {
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
+                                        <th>Cliente</th>
                                         <th>Concepto</th>
                                         <th>Tipo Pago</th>
                                         <th>Referencia</th>
@@ -215,7 +226,15 @@ const Reportes = () => {
                                         stats.detallePagos.map((pago) => (
                                             <tr key={pago.idPago}>
                                                 <td>{new Date(pago.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {new Date(pago.fecha).toLocaleDateString()}</td>
-                                                <td>{pago.concepto}</td>
+                                                <td>{pago.clienteNombre || '-'}</td>
+                                                <td>
+                                                    {pago.concepto}
+                                                    {pago.detalles && pago.detalles.length > 0 && (
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                                            {pago.detalles.map((d, i) => <div key={i}>• {d}</div>)}
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td>
                                                     <span className={`badge-tipo ${pago.tipoPago.toLowerCase().includes('efectivo') || pago.tipoPago === 'E' ? 'efectivo' :
                                                         pago.tipoPago.toLowerCase().includes('tarjeta') || pago.tipoPago === 'C' || pago.tipoPago === 'TC' ? 'tarjeta' : 'transfer'
@@ -259,7 +278,13 @@ const Reportes = () => {
                                                 <span className="amount-highlight">{formatMoney(pago.monto)}</span>
                                             </div>
                                             <div className="card-concept">
-                                                {pago.concepto}
+                                                <strong>{pago.clienteNombre || '-'}</strong><br />
+                                                <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>{pago.concepto}</span>
+                                                {pago.detalles && pago.detalles.length > 0 && (
+                                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                                        {pago.detalles.map((d, i) => <div key={i}>• {d}</div>)}
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="card-footer-row">
                                                 <span className={`badge-tipo ${pago.tipoPago.toLowerCase().includes('efectivo') || pago.tipoPago === 'E' ? 'efectivo' :
@@ -295,6 +320,14 @@ const Reportes = () => {
                             <div className="detail-row">
                                 <strong>Concepto</strong>
                                 <span>{selectedPago.concepto}</span>
+                            </div>
+                            <div className="detail-row">
+                                <strong>Cliente</strong>
+                                <span>{selectedPago.clienteNombre || '-'}</span>
+                            </div>
+                            <div className="detail-row">
+                                <strong>Registrado Por</strong>
+                                <span>{selectedPago.registradoPorNombre || '-'}</span>
                             </div>
                             <div className="detail-row">
                                 <strong>Fecha</strong>
@@ -340,6 +373,47 @@ const Reportes = () => {
                                     {formatMoney(selectedPago.monto)}
                                 </span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showProductosModal && (
+                <div className="reportes-modal-overlay">
+                    <div className="reportes-modal" style={{ maxWidth: '600px' }}>
+                        <div className="reportes-modal-header">
+                            <h2>Resumen de Productos Vendidos</h2>
+                            <button className="reportes-modal-close" onClick={() => setShowProductosModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="reportes-modal-body">
+                            {stats?.productosVendidos?.length > 0 ? (
+                                <table className="reporte-table" style={{ marginTop: 0 }}>
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th style={{ textAlign: 'center' }}>Cantidad</th>
+                                            <th style={{ textAlign: 'right' }}>Recaudado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {stats.productosVendidos.map((prod, index) => (
+                                            <tr key={index}>
+                                                <td>{prod.nombreProducto}</td>
+                                                <td style={{ textAlign: 'center' }}>{prod.cantidadTotal}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--color-accent-primary)' }}>
+                                                    {formatMoney(prod.recaudadoTotal)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                                    <Package size={48} style={{ opacity: 0.5, marginBottom: '16px' }} />
+                                    <p>No se registraron ventas de productos en este periodo.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

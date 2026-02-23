@@ -16,15 +16,18 @@ import {
     Package,
     Sun,
     Moon,
-    ChevronDown
+    ChevronDown,
+    Zap
 } from 'lucide-react';
 import './DashboardLayout.css';
 import BranchSelector from '../components/BranchSelector';
+import VentaAgilModal from '../components/VentaAgilModal';
 
 const DashboardLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+    const [isVentaAgilOpen, setIsVentaAgilOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(() => {
         return localStorage.getItem('theme') !== 'light';
     });
@@ -32,6 +35,8 @@ const DashboardLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const dropdownRef = useRef(null);
+
+    const canUseVentaAgil = user && (user.roles?.includes('ADMIN') || user.roles?.includes('COACH') || user.roles?.includes('DEV'));
 
     // Handle responsive
     useEffect(() => {
@@ -158,6 +163,16 @@ const DashboardLayout = ({ children }) => {
                     </div>
 
                     <div className="header-right">
+                        {canUseVentaAgil && (
+                            <button
+                                className="theme-toggle-btn"
+                                onClick={() => setIsVentaAgilOpen(true)}
+                                title="Venta Rápida (Escáner)"
+                                style={{ color: '#10b981', marginRight: '8px' }}
+                            >
+                                <Zap size={20} />
+                            </button>
+                        )}
                         <BranchSelector />
 
                         <button
@@ -215,6 +230,11 @@ const DashboardLayout = ({ children }) => {
                     {children}
                 </main>
             </div>
+
+            <VentaAgilModal
+                isOpen={isVentaAgilOpen}
+                onClose={() => setIsVentaAgilOpen(false)}
+            />
         </div>
     );
 };

@@ -101,6 +101,46 @@
     max-width: 80%;
 }
 
+/* Barcode Section */
+.barcode-section {
+    width: 100%;
+    margin-top: 8px;
+    margin-bottom: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+}
+
+.barcode-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 15px;
+}
+
+.barcode-wrapper {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.barcode-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.barcode-box svg {
+    max-width: 100%;
+    height: auto;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -169,5 +209,19 @@
 
     .qr-instruction {
         font-size: 12px;
+    }
+
+    .barcode-section {
+        padding-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    .barcode-header {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .barcode-wrapper {
+        padding: 12px 16px;
     }
 }
