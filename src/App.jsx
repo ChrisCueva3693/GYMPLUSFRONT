@@ -17,6 +17,7 @@ import TiposMembresia from './pages/TiposMembresia';
 import Reportes from './pages/Reportes';
 import Inicio from './pages/Inicio';
 import LoadingSpinner from './components/LoadingSpinner';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import { BranchProvider } from './context/BranchContext'; // Added
 import './App.css';
 
@@ -51,6 +52,7 @@ function App() {
             isAuthenticated ? <Navigate to="/" replace /> : <Register />
           }
         />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* Protected Routes */}
         <Route

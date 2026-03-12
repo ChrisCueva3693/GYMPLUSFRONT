@@ -28,13 +28,10 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Handle 401 Unauthorized - redirect to login
-      if (error.response.status === 401) {
+      // Handle 401 Unauthorized or 403 Forbidden - redirect to login
+      if (error.response.status === 401 || error.response.status === 403) {
         // Avoid loop if already on login
         if (!window.location.pathname.includes('/login')) {
-          // Optional: Import toast if possible or just use alert/console for now, 
-          // but since this is a separate file, accessing React Toast is tricky without a custom event.
-          // Let's simpler: just clear and redirect.
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login?expired=true';
