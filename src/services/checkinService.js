@@ -64,13 +64,14 @@ const checkinService = {
         // Filter memberships for this user
         const userMembresias = allMembresias.filter(m => m.clienteId === user.id);
 
-        // Find active membership
-        const activeMembership = userMembresias.find(m => m.estado === 'ACTIVA');
+        // Find active or pending membership (pending = partial payment, still valid)
+        const activeMembership = userMembresias.find(m => m.estado === 'ACTIVA' || m.estado === 'PENDIENTE');
 
         return {
             user,
             membership: activeMembership || null,
             hasActiveMembership: !!activeMembership,
+            saldoPendiente: activeMembership?.saldoPendiente || 0,
         };
     },
 };

@@ -686,3 +686,176 @@
     color: #f59e0b;
     line-height: 1.4;
 }
+
+/* ===== Search Bar ===== */
+.membresias-search-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.membresias-search-bar:focus-within {
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.membresias-search-icon {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+.membresias-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    padding: var(--spacing-xs) 0;
+}
+
+.membresias-search-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.membresias-search-clear {
+    background: rgba(148, 163, 184, 0.15);
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.membresias-search-clear:hover {
+    background: rgba(148, 163, 184, 0.3);
+    color: var(--color-text-primary);
+}
+
+/* ===== Searchable Client Dropdown ===== */
+.cliente-search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    padding: 0 var(--spacing-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cliente-search-wrapper:focus-within {
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.cliente-search-icon {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+.cliente-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    padding: var(--spacing-sm) 0;
+}
+
+.cliente-search-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.cliente-search-clear {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: all 0.15s;
+}
+
+.cliente-search-clear:hover {
+    color: var(--color-text-primary);
+    background: rgba(148, 163, 184, 0.2);
+}
+
+.cliente-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-lg);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: dropdownSlide 0.15s ease-out;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cliente-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cliente-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.cliente-dropdown-item:hover {
+    background: rgba(124, 58, 237, 0.1);
+}
+
+.cliente-dropdown-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+.cliente-dropdown-username {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.cliente-dropdown-empty {
+    padding: 12px 14px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}

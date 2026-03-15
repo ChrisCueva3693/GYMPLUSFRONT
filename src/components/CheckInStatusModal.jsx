@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { CheckCircle, XCircle, AlertTriangle, Calendar, X } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Calendar, X, DollarSign } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Button from './Button';
@@ -10,6 +10,7 @@ const CheckInStatusModal = ({
     onClose,
     userData,
     membershipData,
+    saldoPendiente = 0,
     onConfirm,
     isAutoChecking,
     autoCheckInSuccess
@@ -108,6 +109,16 @@ const CheckInStatusModal = ({
                             <div className="days-remaining-badge">
                                 {Math.max(0, differenceInDays(new Date(membershipData.fechaFin), new Date()))} días restantes
                             </div>
+
+                            {saldoPendiente > 0 && (
+                                <div className="pending-balance-alert">
+                                    <DollarSign size={20} />
+                                    <div>
+                                        <span className="pending-balance-label">Saldo Pendiente</span>
+                                        <span className="pending-balance-amount">${saldoPendiente.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
 

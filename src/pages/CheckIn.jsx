@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle, XCircle, AlertTriangle, Calendar, User, UserPlus, Maximize2, Minimize2 } from 'lucide-react';
+import { Search, CheckCircle, XCircle, AlertTriangle, Calendar, User, UserPlus, Maximize2, Minimize2, DollarSign } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import Card from '../components/Card';
@@ -22,6 +22,7 @@ const CheckIn = () => {
     const [membershipData, setMembershipData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [checkingIn, setCheckingIn] = useState(false);
+    const [saldoPendiente, setSaldoPendiente] = useState(0);
 
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -65,6 +66,7 @@ const CheckIn = () => {
         setMembershipData(null);
         setIsStatusModalOpen(false);
         setAutoCheckInSuccess(false);
+        setSaldoPendiente(0);
     };
 
     const performCheckIn = async (user, branchId) => {
@@ -113,6 +115,7 @@ const CheckIn = () => {
             const result = await checkinService.verifyUser(userId.trim());
             setUserData(result.user);
             setMembershipData(result.membership);
+            setSaldoPendiente(result.saldoPendiente || 0);
 
             // 2. Open Modal immediately with info
             setIsStatusModalOpen(true);
@@ -120,6 +123,21 @@ const CheckIn = () => {
 
             // 3. Auto Check-In Logic
             if (result.membership && result.hasActiveMembership) {
+                // Show pending balance warning if applicable
+                if (result.saldoPendiente > 0) {
+                    toast(`Saldo pendiente: $${result.saldoPendiente.toFixed(2)}`, {
+                        duration: 6000,
+                        icon: <DollarSign size={20} color="#f59e0b" />,
+                        style: {
+                            background: '#1e1b2e',
+                            color: '#f59e0b',
+                            fontWeight: 'bold',
+                            border: '2px solid rgba(245,158,11,0.4)',
+                            fontSize: '1.1rem',
+                        },
+                    });
+                }
+
                 // Short delay to let the modal animation start and user see their data
                 setTimeout(() => {
                     performCheckIn(result.user, selectedBranchId);
@@ -238,6 +256,7 @@ const CheckIn = () => {
                     onClose={() => setIsStatusModalOpen(false)}
                     userData={userData}
                     membershipData={membershipData}
+                    saldoPendiente={saldoPendiente}
                     onConfirm={handleManualCheckIn}
                     isAutoChecking={checkingIn}
                     autoCheckInSuccess={autoCheckInSuccess}

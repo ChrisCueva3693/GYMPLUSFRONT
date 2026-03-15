@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { CreditCard, Plus, X, Calendar, User, CheckCircle, XCircle, Pencil, Trash2, AlertTriangle, DollarSign, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CreditCard, Plus, X, Calendar, User, CheckCircle, XCircle, Pencil, Trash2, AlertTriangle, DollarSign, Clock, Search } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import membresiaService from '../services/membresiaService';
 import toast, { Toaster } from 'react-hot-toast';
@@ -11,6 +11,7 @@ import './Membresias.css';
 const Membresias = () => {
     const [membresias, setMembresias] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { user } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,6 +21,9 @@ const Membresias = () => {
 
     const [selectedClientes, setSelectedClientes] = useState([]);
     const [currentClienteToAdd, setCurrentClienteToAdd] = useState('');
+    const [clienteSearchTerm, setClienteSearchTerm] = useState('');
+    const [isClienteDropdownOpen, setIsClienteDropdownOpen] = useState(false);
+    const clienteDropdownRef = useRef(null);
 
     const [pagos, setPagos] = useState([]);
     const [currentPagoType, setCurrentPagoType] = useState('');
@@ -54,6 +58,17 @@ const Membresias = () => {
 
     useEffect(() => {
         fetchMembresias();
+    }, []);
+
+    // Click outside handler for client dropdown
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (clienteDropdownRef.current && !clienteDropdownRef.current.contains(e.target)) {
+                setIsClienteDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const fetchMembresias = async () => {
@@ -93,6 +108,8 @@ const Membresias = () => {
 
             setSelectedClientes([]);
             setCurrentClienteToAdd('');
+            setClienteSearchTerm('');
+            setIsClienteDropdownOpen(false);
             setSelectedTipoMembresia('');
             setPagos([]);
             setCurrentPagoType('');
@@ -333,6 +350,10 @@ const Membresias = () => {
         ? format(addDays(new Date(fechaInicio), planDetails.duracionDias), 'yyyy-MM-dd')
         : '';
 
+    const filteredMembresias = membresias.filter(m =>
+        m.clienteNombre?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="membresias-page">
             <Toaster position="top-right" />
@@ -352,6 +373,23 @@ const Membresias = () => {
                 </button>
             </div>
 
+            {/* Search Bar */}
+            <div className="membresias-search-bar">
+                <Search size={18} className="membresias-search-icon" />
+                <input
+                    type="text"
+                    placeholder="Buscar por nombre de cliente..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="membresias-search-input"
+                />
+                {searchTerm && (
+                    <button className="membresias-search-clear" onClick={() => setSearchTerm('')}>
+                        <X size={16} />
+                    </button>
+                )}
+            </div>
+
             {/* Table */}
             {loading ? (
                 <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
@@ -359,7 +397,7 @@ const Membresias = () => {
                 </div>
             ) : (
                 <div className="membresias-table-container">
-                    {membresias.length > 0 ? (
+                    {filteredMembresias.length > 0 ? (
                         <table className="membresias-table desktop-only">
                             <thead>
                                 <tr>
@@ -376,7 +414,7 @@ const Membresias = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {membresias.map((m) => (
+                                {filteredMembresias.map((m) => (
                                     <tr key={m.id}>
                                         <td>#{m.id}</td>
                                         <td>{m.clienteNombre}</td>
@@ -430,13 +468,13 @@ const Membresias = () => {
                     ) : (
                         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                             <CreditCard size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                            <p>No hay membresías registradas</p>
+                            <p>{searchTerm ? 'No se encontraron membresías para esta búsqueda' : 'No hay membresías registradas'}</p>
                         </div>
                     )}
 
                     {/* Mobile Card View */}
                     <div className="membresias-mobile-list mobile-only">
-                        {membresias.map((m) => (
+                        {filteredMembresias.map((m) => (
                             <div className="membresia-card" key={m.id}>
                                 <div className="card-header">
                                     <div className="user-info">
@@ -516,13 +554,66 @@ const Membresias = () => {
                             <div className="membresias-form-group">
                                 <label>Cliente(s) *</label>
                                 <div style={{ display: 'flex', gap: '10px' }}>
-                                    <select value={currentClienteToAdd} onChange={(e) => setCurrentClienteToAdd(e.target.value)} style={{ flex: 1 }}>
-                                        <option value="">Seleccionar cliente...</option>
-                                        {clientes.map(c => (
-                                            <option key={c.id} value={c.id}>{c.nombre} {c.apellido} ({c.username})</option>
-                                        ))}
-                                    </select>
-                                    <button type="button" onClick={addCliente} style={{ height: '38px', backgroundColor: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '0 1rem', cursor: 'pointer' }}>
+                                    <div style={{ flex: 1, position: 'relative' }} ref={clienteDropdownRef}>
+                                        <div className="cliente-search-wrapper">
+                                            <Search size={16} className="cliente-search-icon" />
+                                            <input
+                                                type="text"
+                                                placeholder="Buscar cliente por nombre..."
+                                                value={clienteSearchTerm}
+                                                onChange={(e) => {
+                                                    setClienteSearchTerm(e.target.value);
+                                                    setIsClienteDropdownOpen(true);
+                                                }}
+                                                onFocus={() => setIsClienteDropdownOpen(true)}
+                                                className="cliente-search-input"
+                                                autoComplete="off"
+                                            />
+                                            {clienteSearchTerm && (
+                                                <button
+                                                    type="button"
+                                                    className="cliente-search-clear"
+                                                    onClick={() => { setClienteSearchTerm(''); setCurrentClienteToAdd(''); }}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {isClienteDropdownOpen && (
+                                            <div className="cliente-dropdown">
+                                                {clientes
+                                                    .filter(c => {
+                                                        const fullName = `${c.nombre} ${c.apellido} ${c.username}`.toLowerCase();
+                                                        return fullName.includes(clienteSearchTerm.toLowerCase());
+                                                    })
+                                                    .filter(c => !selectedClientes.includes(c.id))
+                                                    .map(c => (
+                                                        <div
+                                                            key={c.id}
+                                                            className="cliente-dropdown-item"
+                                                            onClick={() => {
+                                                                setCurrentClienteToAdd(c.id.toString());
+                                                                setClienteSearchTerm(`${c.nombre} ${c.apellido}`);
+                                                                setIsClienteDropdownOpen(false);
+                                                            }}
+                                                        >
+                                                            <span className="cliente-dropdown-name">{c.nombre} {c.apellido}</span>
+                                                            <span className="cliente-dropdown-username">({c.username})</span>
+                                                        </div>
+                                                    ))}
+                                                {clientes
+                                                    .filter(c => {
+                                                        const fullName = `${c.nombre} ${c.apellido} ${c.username}`.toLowerCase();
+                                                        return fullName.includes(clienteSearchTerm.toLowerCase());
+                                                    })
+                                                    .filter(c => !selectedClientes.includes(c.id))
+                                                    .length === 0 && (
+                                                        <div className="cliente-dropdown-empty">No se encontraron clientes</div>
+                                                    )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button type="button" onClick={() => { addCliente(); setClienteSearchTerm(''); }} style={{ height: '38px', backgroundColor: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '0 1rem', cursor: 'pointer' }}>
                                         <Plus size={16} />
                                     </button>
                                 </div>
