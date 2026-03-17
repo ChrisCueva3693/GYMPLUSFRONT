@@ -163,12 +163,12 @@ const PrivacyPolicy = () => {
             </li>
             <li>
               <strong style={{ color: '#cbd5e1' }}>
-                Datos de uso del asistente IA:
+                Datos de uso del asistente IA (Coach IA):
               </strong>{' '}
-              los mensajes que envía al Coach IA (asistente virtual) son
-              procesados por servicios de inteligencia artificial para generar
-              respuestas personalizadas. Se envía su identificador de usuario y
-              nombre para contextualizar las respuestas.
+              Cuando utiliza la función Coach IA, recopilamos los mensajes que escribe
+              en el chat, su nombre completo, número de cédula y su identificador de usuario.
+              Estos datos se recopilan en el momento en que envía una consulta y se utilizan
+              estrictamente para generar recomendaciones personalizadas de fitness y nutrición.
             </li>
           </ul>
         </div>
@@ -217,25 +217,29 @@ const PrivacyPolicy = () => {
             </li>
             <li>
               No compartimos su información personal con terceros, excepto para
-              el procesamiento del Coach IA como se describe en la sección 2.
+              el procesamiento del Coach IA como se describe en la sección 5.
             </li>
           </ul>
         </div>
 
         <div style={sectionStyle}>
-          <h2 style={headingStyle}>5. Servicios de Terceros</h2>
+          <h2 style={headingStyle}>5. Servicios de Terceros e IA</h2>
           <p style={textStyle}>
-            Nuestra aplicación utiliza los siguientes servicios de terceros:
+            Nuestra aplicación utiliza servicios de terceros. Compartimos datos bajo
+            estrictas medidas de seguridad:
           </p>
           <ul style={listStyle}>
             <li>
               <strong style={{ color: '#cbd5e1' }}>
-                Servicios de IA (Coach IA):
+                Integración de Inteligencia Artificial (Coach IA):
               </strong>{' '}
-              Los mensajes del asistente virtual son procesados a través de
-              servicios de inteligencia artificial para generar respuestas. Los
-              datos enviados incluyen el mensaje, su identificador de usuario y
-              nombre.
+              Para el funcionamiento del Coach IA, compartimos explícitamente su nombre completo,
+              número de cédula/documento, identificador de usuario y el contenido de sus mensajes
+              con un servicio de procesamiento intermedio (n8n) que se conecta con
+              proveedores de Inteligencia Artificial de terceros. Confirmamos que estos terceros
+              procesan la información de forma segura y proporcionan un nivel de protección
+              igual o equivalente al detallado en esta política. Los datos no se utilizan para
+              entrenar modelos públicos ni se venden a terceros.
             </li>
           </ul>
         </div>
