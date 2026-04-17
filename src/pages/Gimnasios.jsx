@@ -80,6 +80,19 @@ const Gimnasios = () => {
         }
     };
 
+    const handleToggleStatus = async (gym) => {
+        const action = gym.activo ? 'suspender' : 'activar';
+        if (!confirm(`¿Estás seguro de ${action} el gimnasio ${gym.nombre}?`)) return;
+
+        try {
+            await apiClient.patch(`/api/gimnasios/${gym.id}/estado`);
+            toast.success(`Gimnasio ${gym.activo ? 'suspendido' : 'activado'}`);
+            loadGimnasios();
+        } catch (error) {
+            toast.error(`Error al ${action} el gimnasio`);
+        }
+    };
+
     const filteredGimnasios = gimnasios.filter(g =>
         g.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -121,6 +134,18 @@ const Gimnasios = () => {
                                 <h3>{gym.nombre}</h3>
                                 <p>{gym.emailContacto || 'Sin email'}</p>
                             </div>
+                            <span style={{
+                                padding: '4px 8px',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                marginLeft: 'auto',
+                                alignSelf: 'flex-start',
+                                backgroundColor: gym.activo ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                color: gym.activo ? 'var(--color-accent-success)' : 'var(--color-accent-danger)'
+                            }}>
+                                {gym.activo ? 'Activo' : 'Suspendido'}
+                            </span>
                         </div>
 
                         <div className="membresia-dates">
@@ -146,6 +171,18 @@ const Gimnasios = () => {
                             <button className="sucursal-btn-delete" onClick={() => handleDelete(gym.id)}>
                                 <Trash2 size={14} />
                                 Eliminar
+                            </button>
+                            <button 
+                                className="sucursal-btn-edit" 
+                                style={{ 
+                                    backgroundColor: gym.activo ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
+                                    color: gym.activo ? 'var(--color-accent-danger)' : 'var(--color-accent-success)',
+                                    border: 'none',
+                                    transition: 'background-color 0.2s'
+                                }}
+                                onClick={() => handleToggleStatus(gym)}
+                            >
+                                {gym.activo ? 'Suspender' : 'Activar'}
                             </button>
                         </div>
                     </Card>

@@ -13,6 +13,10 @@ const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // DEV Gym Filter State
+    const [gimnasios, setGimnasios] = useState([]);
+    const [selectedGimnasioId, setSelectedGimnasioId] = useState('all');
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,15 +38,28 @@ const Usuarios = () => {
     // Roles logic removed as it's now handled in UserFormModal
 
     useEffect(() => {
+        if (user?.roles?.includes('DEV')) {
+            apiClient.get('/api/gimnasios')
+                .then(res => setGimnasios(res.data))
+                .catch(err => console.error('Error loading gyms', err));
+        }
+    }, [user]);
+
+    useEffect(() => {
         loadUsuarios();
-    }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedGimnasioId]);
 
     const loadUsuarios = async () => {
         setLoading(true);
         try {
             let response;
             if (user?.roles?.includes('DEV')) {
-                response = await apiClient.get('/api/usuarios');
+                if (selectedGimnasioId && selectedGimnasioId !== 'all') {
+                    response = await apiClient.get(`/api/usuarios/gimnasio/${selectedGimnasioId}`);
+                } else {
+                    response = await apiClient.get('/api/usuarios');
+                }
             } else if (user?.roles?.includes('ADMIN') || user?.roles?.includes('COACH')) {
                 if (user.idSucursalPorDefecto) {
                     response = await apiClient.get(`/api/usuarios/sucursal/${user.idSucursalPorDefecto}`);
@@ -149,15 +166,30 @@ const Usuarios = () => {
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="usuarios-search">
-                <Search size={18} />
-                <input
-                    type="text"
-                    placeholder="Buscar por nombre, email o cédula..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            {/* Action Bar */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap' }}>
+                <div className="usuarios-search" style={{ flex: 1, marginBottom: 0 }}>
+                    <Search size={18} />
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, email o cédula..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                {user?.roles?.includes('DEV') && (
+                    <select
+                        className="usuarios-search"
+                        style={{ marginBottom: 0, padding: '0.75rem', cursor: 'pointer', maxWidth: '300px', flex: 'none', color: 'var(--color-text-primary)' }}
+                        value={selectedGimnasioId}
+                        onChange={(e) => setSelectedGimnasioId(e.target.value)}
+                    >
+                        <option value="all">Todos los Gimnasios</option>
+                        {gimnasios.map(gym => (
+                            <option key={gym.id} value={gym.id}>{gym.nombre}</option>
+                        ))}
+                    </select>
+                )}
             </div>
 
             {/* Table & Mobile Cards */}

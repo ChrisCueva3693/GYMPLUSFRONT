@@ -16,11 +16,14 @@ const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    const [loginError, setLoginError] = useState(null);
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
         });
+        setLoginError(null); // Clear error on edit
     };
 
     useEffect(() => {
@@ -33,6 +36,7 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoginError(null);
 
         if (!formData.username || !formData.password) {
             toast.error('Por favor completa todos los campos');
@@ -46,7 +50,11 @@ const Login = () => {
             toast.success('¡Bienvenido!');
             navigate('/');
         } catch (error) {
-            toast.error(error.message || 'Error al iniciar sesión');
+            if (error.message && error.message.includes('GIMNASIO_INACTIVO:')) {
+                setLoginError(error.message.replace('GIMNASIO_INACTIVO:', ''));
+            } else {
+                toast.error(error.message || 'Error al iniciar sesión');
+            }
         } finally {
             setLoading(false);
         }
@@ -88,6 +96,24 @@ const Login = () => {
                     </p>
 
                     <form onSubmit={handleSubmit} className="login-form">
+                        {loginError && (
+                            <div style={{
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                color: 'var(--color-accent-danger)',
+                                padding: '1rem',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                marginBottom: 'var(--spacing-md)',
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: 'var(--spacing-sm)'
+                            }}>
+                                <svg style={{ flexShrink: 0, marginTop: '2px' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                <span>{loginError}</span>
+                            </div>
+                        )}
+
                         <Input
                             label="Usuario"
                             name="username"
