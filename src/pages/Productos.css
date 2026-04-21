@@ -493,12 +493,6 @@
 
 /* Responsive Table */
 @media (max-width: 768px) {
-
-    .productos-table th:nth-child(3),
-    .productos-table td:nth-child(3) {
-        display: none;
-    }
-
     .producto-info .description {
         max-width: 150px;
     }

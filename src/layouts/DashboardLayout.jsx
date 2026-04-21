@@ -110,7 +110,7 @@ const DashboardLayout = ({ children }) => {
         { path: '/clientes', icon: Users, label: 'Clientes', roles: ['DEV', 'ADMIN', 'COACH'] },
         { path: '/productos', icon: Package, label: 'Productos', roles: ['DEV', 'ADMIN'] },
         { path: '/sucursales', icon: MapPin, label: 'Sucursales', roles: ['DEV'] },
-        { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['DEV', 'ADMIN'] },
+        { path: '/reportes', icon: FileText, label: 'Reportes', roles: ['ADMIN'] },
         { path: '/gimnasios', icon: Building2, label: 'Gimnasios', roles: ['DEV'] },
     ];
 

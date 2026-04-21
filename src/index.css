@@ -460,3 +460,23 @@ p {
   margin: 0 0 var(--spacing-lg) 0;
   color: var(--color-text-primary);
 }
+
+/* ===== Global Responsive Fixes ===== */
+/* Make all table containers swipeable on mobile instead of breaking layout */
+[class*="-table-container"] {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+[class*="-table-container"] table {
+  min-width: 600px; /* Force minimum width to trigger horizontal scroll when needed */
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  /* Provide a generic fallback for specific grid-based forms if not locally overridden */
+  [class*="-form-row"] {
+    grid-template-columns: 1fr !important;
+  }
+}
